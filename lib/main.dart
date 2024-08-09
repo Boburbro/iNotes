@@ -34,7 +34,8 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (context) => NoteBloc()),
       ],
       child: MaterialApp(
-        title: 'Flutter Demo',
+        title: 'Note app',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
