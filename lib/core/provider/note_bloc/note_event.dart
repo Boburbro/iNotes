@@ -16,8 +16,8 @@ class DeleteNoteEvent extends NoteEvent {
   DeleteNoteEvent({required this.note});
 }
 
-class EditNoteEvent extends NoteEvent {
+class UpdateNoteEvent extends NoteEvent {
   final Note note;
 
-  EditNoteEvent({required this.note});
+  UpdateNoteEvent({required this.note});
 }

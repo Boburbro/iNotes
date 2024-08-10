@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:note_app/core/models/note/note.dart';
+
 import 'package:note_app/core/provider/note_bloc/note_event.dart';
 import 'package:note_app/core/provider/note_bloc/note_state.dart';
 
@@ -42,7 +43,6 @@ class _HomePageState extends State<HomePage> {
               key: ValueKey(note.id),
               endActionPane: ActionPane(
                 motion: const ScrollMotion(),
-                dismissible: DismissiblePane(onDismissed: () {}),
                 children: [
                   SlidableAction(
                     onPressed: (context) async {
@@ -98,15 +98,17 @@ class _HomePageState extends State<HomePage> {
                             ),
                             TextButton(
                               onPressed: () {
-                                final newnote = Note(
+                                if (_titleController.text.trim().isEmpty || _descriptionController.text.trim().isEmpty) return;
+                                final newNote = Note(
                                   id: note.id,
                                   title: _titleController.text.trim(),
                                   description: _descriptionController.text.trim(),
                                 );
-                                context.read<NoteBloc>().add(EditNoteEvent(note: newnote));
+
+                                context.read<NoteBloc>().add(UpdateNoteEvent(note: newNote));
                                 Navigator.of(context).pop();
                               },
-                              child: const Text('Save'),
+                              child: const Text('Update'),
                             ),
                           ],
                         ),

@@ -14,8 +14,8 @@ class CacheServiceImpl implements CacheService {
   }
 
   @override
-  Future<void> addNote(String key, Note note) async {
-    await boxes.notes.put(key, note);
+  Future<void> addNote(String id, Note note) async {
+    await boxes.notes.put(id, note);
   }
 
   @override
