@@ -21,3 +21,17 @@ class UpdateNoteEvent extends NoteEvent {
 
   UpdateNoteEvent({required this.note});
 }
+
+class AddNoteToFavoriteEvent extends NoteEvent {
+  final Note note;
+
+  AddNoteToFavoriteEvent({required this.note});
+}
+
+class RemoveNoteFromFavoriteEvent extends NoteEvent {
+  final Note note;
+
+  RemoveNoteFromFavoriteEvent({required this.note});
+}
+
+class FetchFavoriteNotesEvent extends NoteEvent {}

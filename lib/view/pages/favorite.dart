@@ -2,24 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:note_app/core/models/note/note.dart';
-
+import 'package:note_app/core/provider/note_bloc/note_bloc.dart';
 import 'package:note_app/core/provider/note_bloc/note_event.dart';
-import 'package:note_app/core/provider/note_bloc/note_state.dart';
+import 'package:note_app/view/utilities/extensions.dart';
 
-import '../core/provider/note_bloc/note_bloc.dart';
+import '../../core/provider/note_bloc/note_state.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class FavoritePage extends StatefulWidget {
+  const FavoritePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<FavoritePage> createState() => _FavoritePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _FavoritePageState extends State<FavoritePage> {
   @override
   void initState() {
     super.initState();
-    context.read<NoteBloc>().add(FetchNotesEvent());
+    context.read<NoteBloc>().add(FetchFavoriteNotesEvent());
   }
 
   final _titleController = TextEditingController();
@@ -34,13 +34,13 @@ class _HomePageState extends State<HomePage> {
             child: CircularProgressIndicator(),
           );
         }
-        final notes = state.notes;
+        final favoriteNotes = state.favoriteNotes;
         return ListView.builder(
-          itemCount: notes.length,
+          itemCount: favoriteNotes.length,
           itemBuilder: (context, index) {
-            final note = notes[index];
+            final favoriteNote = favoriteNotes[index];
             return Slidable(
-              key: ValueKey(note.id),
+              key: ValueKey(favoriteNote.id),
               endActionPane: ActionPane(
                 motion: const ScrollMotion(),
                 children: [
@@ -58,7 +58,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                             TextButton(
                               onPressed: () {
-                                context.read<NoteBloc>().add(DeleteNoteEvent(note: note));
+                                context.read<NoteBloc>().add(DeleteNoteEvent(note: favoriteNote));
                                 Navigator.of(context).pop();
                               },
                               child: const Text('Delete'),
@@ -100,9 +100,11 @@ class _HomePageState extends State<HomePage> {
                               onPressed: () {
                                 if (_titleController.text.trim().isEmpty || _descriptionController.text.trim().isEmpty) return;
                                 final newNote = Note(
-                                  id: note.id,
+                                  id: favoriteNote.id,
+                                  isfavorite: favoriteNote.isfavorite,
                                   title: _titleController.text.trim(),
                                   description: _descriptionController.text.trim(),
+                                  createdAt: DateTime.now().toFormat(),
                                 );
 
                                 context.read<NoteBloc>().add(UpdateNoteEvent(note: newNote));
@@ -122,8 +124,28 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               child: ListTile(
-                title: Text(note.title),
-                subtitle: Text(note.description),
+                title: Text(favoriteNote.title),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(favoriteNote.description),
+                    Text(favoriteNote.createdAt, style: const TextStyle(fontSize: 10)),
+                  ],
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.favorite),
+                  color: Colors.red,
+                  onPressed: () {
+                    final unfavoriteNote = Note(
+                      id: favoriteNote.id,
+                      isfavorite: false,
+                      title: favoriteNote.title,
+                      description: favoriteNote.description,
+                      createdAt: favoriteNote.createdAt,
+                    );
+                    context.read<NoteBloc>().add(RemoveNoteFromFavoriteEvent(note: unfavoriteNote));
+                  },
+                ),
               ),
             );
           },

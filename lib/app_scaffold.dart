@@ -3,9 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:note_app/core/models/note/note.dart';
 import 'package:note_app/core/provider/note_bloc/note_bloc.dart';
 import 'package:note_app/core/provider/note_bloc/note_event.dart';
-import 'package:note_app/pages/favorite.dart';
-import 'package:note_app/pages/home.dart';
-import 'package:note_app/pages/profile.dart';
+import 'package:note_app/view/pages/favorite.dart';
+import 'package:note_app/view/pages/home.dart';
+import 'package:note_app/view/pages/profile.dart';
+import 'package:note_app/view/utilities/extensions.dart';
 import 'package:uuid/uuid.dart';
 
 class AppScaffold extends StatefulWidget {
@@ -54,8 +55,11 @@ class _AppScaffoldState extends State<AppScaffold> {
             TextButton(
               onPressed: () {
                 if (_titleController.text.trim().isEmpty || _descriptionController.text.trim().isEmpty) return;
+
                 final note = Note(
                   id: const Uuid().v4(),
+                  isfavorite: false,
+                  createdAt: DateTime.now().toFormat(),
                   title: _titleController.text.trim(),
                   description: _descriptionController.text.trim(),
                 );
@@ -97,16 +101,5 @@ class _AppScaffoldState extends State<AppScaffold> {
         child: const Icon(Icons.add),
       ),
     );
-  }
-}
-
-extension on int {
-  String getTitle() {
-    if (this == 0) {
-      return 'Home';
-    } else if (this == 1) {
-      return 'Favorite';
-    }
-    return 'Profile';
   }
 }

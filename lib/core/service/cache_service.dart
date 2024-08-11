@@ -3,9 +3,13 @@ import 'package:note_app/core/models/note/note.dart';
 
 abstract class CacheService {
   Future<void> addNote(String id, Note note);
-  Future<List<Note>> getNotes();
+  Future<List<Note>> fetchNotes();
   Future<void> deleteNote(String id);
   Future<void> updateNote(Note note);
+
+  Future<void> addNoteToFavorite(Note note);
+  Future<void> removeNoteFromFavorites(Note note);
+  Future<List<Note>> fetchFavoriteNotes();
 }
 
 class CacheServiceImpl implements CacheService {
@@ -19,7 +23,7 @@ class CacheServiceImpl implements CacheService {
   }
 
   @override
-  Future<List<Note>> getNotes() async {
+  Future<List<Note>> fetchNotes() async {
     return boxes.notes.values.toList();
   }
 
@@ -31,6 +35,23 @@ class CacheServiceImpl implements CacheService {
   @override
   Future<void> updateNote(Note note) async {
     await boxes.notes.put(note.id, note);
+  }
+
+  @override
+  Future<void> addNoteToFavorite(Note favoriteNote) async {
+    await boxes.notes.put(favoriteNote.id, favoriteNote);
+  }
+
+  @override
+  Future<void> removeNoteFromFavorites(Note favoriteNote) async {
+    await boxes.notes.put(favoriteNote.id, favoriteNote);
+  }
+
+  @override
+  Future<List<Note>> fetchFavoriteNotes() async {
+    final notes = await fetchNotes();
+    final favoriteNotes = notes.where((note) => note.isfavorite).toList();
+    return favoriteNotes;
   }
 
   late Boxes boxes;
