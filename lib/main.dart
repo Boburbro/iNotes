@@ -5,6 +5,8 @@ import 'package:note_app/app_scaffold.dart';
 import 'package:note_app/core/models/note/note.dart';
 import 'package:note_app/core/provider/note_bloc/note_bloc.dart';
 import 'package:note_app/core/provider/search_note_bloc/search_bloc.dart';
+import 'package:note_app/core/provider/theme/theme_cubit.dart';
+import 'package:note_app/core/provider/theme/theme_state.dart';
 import 'package:path_provider/path_provider.dart' as path;
 
 void main() async {
@@ -33,15 +35,17 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (context) => NoteBloc()),
         BlocProvider(create: (context) => SearchBloc()),
+        BlocProvider(create: (context) => ThemeCubit()..getTheme),
       ],
-      child: MaterialApp(
-        title: 'Note app',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
-        home: const AppScaffold(),
+      child: BlocBuilder<ThemeCubit, ThemeState>(
+        builder: (context, state) {
+          return MaterialApp(
+            title: 'Note app',
+            debugShowCheckedModeBanner: false,
+            theme: state.theme,
+            home: const AppScaffold(),
+          );
+        },
       ),
     );
   }

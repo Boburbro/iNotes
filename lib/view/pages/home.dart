@@ -124,44 +124,55 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
-              child: ListTile(
-                title: Text(note.title),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(note.description),
-                    Text(note.createdAt, style: const TextStyle(fontSize: 10)),
-                  ],
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.favorite),
-                  color: switch (note.isfavorite) {
-                    true => Colors.red,
-                    _ => null,
-                  },
-                  onPressed: () {
-                    if (!note.isfavorite) {
-                      final favoriteNote = Note(
-                        id: note.id,
-                        isfavorite: true,
-                        title: note.title,
-                        description: note.description,
-                        createdAt: note.createdAt,
-                      );
-                      context.read<NoteBloc>().add(AddNoteToFavoriteEvent(note: favoriteNote));
-                    } else {
-                      final unfavoriteNote = Note(
-                        id: note.id,
-                        isfavorite: false,
-                        title: note.title,
-                        description: note.description,
-                        createdAt: note.createdAt,
-                      );
-                      context.read<NoteBloc>().add(RemoveNoteFromFavoriteEvent(note: unfavoriteNote));
-                    }
-                  },
-                ),
-              ),
+              child: Builder(builder: (context) {
+                return ListTile(
+                  title: Text(
+                    note.title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        note.description,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      Text(
+                        note.createdAt,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontSize: 10),
+                      ),
+                    ],
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.favorite),
+                    color: switch (note.isfavorite) {
+                      true => Colors.red,
+                      _ => null,
+                    },
+                    onPressed: () {
+                      if (!note.isfavorite) {
+                        final favoriteNote = Note(
+                          id: note.id,
+                          isfavorite: true,
+                          title: note.title,
+                          description: note.description,
+                          createdAt: note.createdAt,
+                        );
+                        context.read<NoteBloc>().add(AddNoteToFavoriteEvent(note: favoriteNote));
+                      } else {
+                        final unfavoriteNote = Note(
+                          id: note.id,
+                          isfavorite: false,
+                          title: note.title,
+                          description: note.description,
+                          createdAt: note.createdAt,
+                        );
+                        context.read<NoteBloc>().add(RemoveNoteFromFavoriteEvent(note: unfavoriteNote));
+                      }
+                    },
+                  ),
+                );
+              }),
             );
           },
         );
