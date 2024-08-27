@@ -10,6 +10,8 @@ abstract class CacheService {
   Future<void> addNoteToFavorite(Note note);
   Future<void> removeNoteFromFavorites(Note note);
   Future<List<Note>> fetchFavoriteNotes();
+
+  Future<List<Note>> searchNote(String keyword);
 }
 
 class CacheServiceImpl implements CacheService {
@@ -55,4 +57,11 @@ class CacheServiceImpl implements CacheService {
   }
 
   late Boxes boxes;
+
+  @override
+  Future<List<Note>> searchNote(String keyword) async {
+    final notes = await fetchNotes();
+    final searchedNotes = notes.where((note) => note.title.startsWith(keyword));
+    return searchedNotes.toList();
+  }
 }

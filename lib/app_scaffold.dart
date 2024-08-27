@@ -6,6 +6,7 @@ import 'package:note_app/core/provider/note_bloc/note_event.dart';
 import 'package:note_app/view/pages/favorite.dart';
 import 'package:note_app/view/pages/home.dart';
 import 'package:note_app/view/pages/profile.dart';
+import 'package:note_app/view/pages/search.dart';
 import 'package:note_app/view/utilities/extensions.dart';
 import 'package:uuid/uuid.dart';
 
@@ -85,6 +86,18 @@ class _AppScaffoldState extends State<AppScaffold> {
     return Scaffold(
       appBar: AppBar(
         title: Text(appBarTitles[_currentIndex] ?? ''),
+        actions: _currentIndex == 0
+            ? [
+                IconButton(
+                  onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SearchPage(),
+                      )),
+                  icon: const Icon(Icons.search),
+                )
+              ]
+            : null,
       ),
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
