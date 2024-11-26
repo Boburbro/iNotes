@@ -78,3 +78,58 @@ async fn fetch_notes(
         }
     }
 }
+
+#[get("/recent-notes")]
+async fn fetch_recent_notes(
+    req: HttpRequest,
+    data: web::Data<AppState>,
+    query: web::Query<QueryParams>,
+) -> impl Responder {
+    let params = RequestContextParams {
+        query_params: Some(query.into_inner()),
+        ..Default::default()
+    };
+
+    let context = match RequestContext::new(req, &data, params) {
+        Ok(ctx) => ctx,
+        Err(err) => return err,
+    };
+
+    let pagination = context.pagination();
+
+    match db::fetch_recent_notes_from_db(&context.conn, pagination.per_page, pagination.offset) {
+        Ok(notes) => {
+            let total = notes.len() as u32;
+            let response = ApiResponse::build(notes, total, &pagination);
+            HttpResponse::Ok().json(response)
+        }
+        Err(e) => {
+            error!("Failed to fetch recent notes from database: {}", e);
+            HttpResponse::InternalServerError().json(json!({
+                "message": "Internal Server Error"
+            }))
+        }
+    }
+}
+
+#[get("/categories")]
+async fn fetch_categories(req: HttpRequest, data: web::Data<AppState>) -> impl Responder {
+    let params = RequestContextParams {
+        ..Default::default()
+    };
+
+    let context = match RequestContext::new(req, &data, params) {
+        Ok(ctx) => ctx,
+        Err(err) => return err,
+    };
+
+    match db::fetch_categories_from_db(&context.conn) {
+        Ok(categories) => HttpResponse::Ok().json(categories),
+        Err(e) => {
+            error!("Failed to fetch categories from database: {}", e);
+            HttpResponse::InternalServerError().json(json!({
+                "message": "Internal Server Error"
+            }))
+        }
+    }
+}
