@@ -27,6 +27,8 @@ async fn main() -> std::io::Result<()> {
             .app_data(data.clone())
             .service(api::add_note)
             .service(api::fetch_notes)
+            .service(api::fetch_recent_notes)
+            .service(api::fetch_categories)
         //.service(Files::new("/uploads", "./uploads").show_files_listing())
     })
     .bind("127.0.0.1:8080")?
