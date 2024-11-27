@@ -97,7 +97,7 @@ async fn fetch_recent_notes(
 
     let pagination = context.pagination();
 
-    match db::fetch_recent_notes_from_db(&context.conn, pagination.per_page, pagination.offset) {
+    match db::fetch_recent_notes_from_db(&context.conn) {
         Ok(notes) => {
             let total = notes.len() as u32;
             let response = ApiResponse::build(notes, total, &pagination);
