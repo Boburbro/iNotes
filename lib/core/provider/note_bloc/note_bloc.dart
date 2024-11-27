@@ -1,92 +1,287 @@
 import 'package:bloc/bloc.dart';
-import 'package:note_app/core/provider/note_bloc/note_event.dart';
-import 'package:note_app/core/provider/note_bloc/note_state.dart';
-import 'package:note_app/core/service/cache_service.dart';
+import 'package:inotes/core/models/category.dart';
+import 'package:inotes/core/models/note.dart';
+import 'package:inotes/core/models/response.dart';
+import 'package:inotes/core/service/log_service.dart';
+import 'package:inotes/core/service/remote/note.dart';
+import 'package:inotes/core/types.dart';
+
+part 'note_event.dart';
+part 'note_state.dart';
 
 class NoteBloc extends Bloc<NoteEvent, NoteState> {
   NoteBloc()
-      : _cacheService = CacheServiceImpl(),
+      : _service = NoteService.instance,
         super(NoteState.initial()) {
-    on<AddNoteEvent>(_onAddNoteEvent);
-    on<FetchNotesEvent>(_onFetchNotesEvent);
-    on<DeleteNoteEvent>(_onDeleteNoteEvent);
-    on<UpdateNoteEvent>(_onUpdateNoteEvent);
+    on<NoteEvent>((event, emit) async {
+      switch (event.event) {
+        case NoteEvents.addNoteStart:
+          await _onAddNoteStart(event, emit);
+          break;
+        case NoteEvents.fetchNotesStart:
+          await _onfetchNotesStart(event, emit);
+          break;
+        case NoteEvents.fetchRecentNotesStart:
+          await _onfetchRecentNotesStart(event, emit);
+          break;
+        case NoteEvents.deleteNoteStart:
+          await _onDeleteNoteStart(event, emit);
+          break;
+        case NoteEvents.updateNoteStart:
+          await _onUpdateNoteStart(event, emit);
+          break;
+        case NoteEvents.fetchCategoriesStart:
+          await _onfetchCategoriesStart(event, emit);
+          break;
+        case NoteEvents.addCategoryStart:
+          await _onAddCategoryStart(event, emit);
+          break;
 
-    on<AddNoteToFavoriteEvent>(_onAddNoteToFavoriteEvent);
-    on<RemoveNoteFromFavoriteEvent>(_onRemoveNoteFromFavoriteEvent);
-    on<FetchFavoriteNotesEvent>(_onFetchFavoriteNotesEvent);
+        default:
+      }
+    });
   }
 
-  _onAddNoteEvent(AddNoteEvent event, Emitter<NoteState> emit) async {
-    emit(state.copyWith(isloading: true));
-    await _cacheService.addNote(event.note.id, event.note);
-    final notes = state.notes..add(event.note);
-    emit(state.copyWith(isloading: false, notes: notes));
+  Future<void> _onAddNoteStart(NoteEvent event, Emitter<NoteState> emit) async {
+    emit(state.copyWith(
+      event: NoteEvents.addNoteStart,
+    ));
+
+    try {
+      final Note? note = await _service.addNote(noteJson: event.payload);
+
+      if (note != null) {
+        emit(state.copyWith(
+          event: NoteEvents.addNoteSuccess,
+        ));
+        if (state.recentNotes!.data.isNotEmpty) {
+          state.recentNotes!.data.removeLast();
+        }
+        state.recentNotes!.data.add(note);
+      }
+
+      emit(state);
+    } catch (error, stackTrace) {
+      CSLog.instance.error(
+        'Failed to add note',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      emit(state.copyWith(
+        event: NoteEvents.addNoteFailure,
+      ));
+    }
   }
 
-  _onFetchNotesEvent(FetchNotesEvent event, Emitter<NoteState> emit) async {
-    emit(state.copyWith(isloading: true));
-    final notes = await _cacheService.fetchNotes();
+  Future<void> _onfetchNotesStart(NoteEvent event, Emitter<NoteState> emit) async {
+    emit(state.copyWith(
+      event: NoteEvents.fetchNotesStart,
+    ));
 
-    emit(state.copyWith(isloading: false, notes: notes));
+    final bool isForceRefresh = event.payload;
+
+    final data = state.notes?.data;
+    final isExistData = data != null && data.isNotEmpty;
+
+    // If there's existing data and it's not a forced refresh, emit the current state
+    if (isExistData && !isForceRefresh) {
+      emit(state.copyWith(event: NoteEvents.fetchNotesSuccess));
+      return;
+    }
+
+    // Proceed to fetch fresh data
+    try {
+      final PaginatedDataResponse<Note>? notes = await _service.fetchNotes();
+
+      emit(state.copyWith(
+        notes: notes,
+        event: NoteEvents.fetchNotesSuccess,
+      ));
+    } catch (error, stackTrace) {
+      CSLog.instance.error(
+        'Failed to fetch notes',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      emit(state.copyWith(
+        event: NoteEvents.fetchNotesFailure,
+      ));
+    }
   }
 
-  _onDeleteNoteEvent(DeleteNoteEvent event, Emitter<NoteState> emit) async {
-    emit(state.copyWith(isloading: true));
-    await _cacheService.deleteNote(event.note.id);
-    final notes = state.notes..removeWhere((note) => note.id == event.note.id);
-    final favoriteNotes = state.favoriteNotes..removeWhere((note) => note.id == event.note.id);
+  Future<void> _onfetchRecentNotesStart(NoteEvent event, Emitter<NoteState> emit) async {
+    emit(state.copyWith(
+      event: NoteEvents.fetchRecentNotesStart,
+    ));
 
-    emit(state.copyWith(isloading: false, notes: notes, favoriteNotes: favoriteNotes));
+    final bool isForceRefresh = event.payload;
+
+    final data = state.recentNotes?.data;
+    final isExistData = data != null && data.isNotEmpty;
+
+    // If there's existing data and it's not a forced refresh, emit the current state
+    if (isExistData && !isForceRefresh) {
+      emit(state.copyWith(event: NoteEvents.fetchRecentNotesSuccess));
+      return;
+    }
+
+    // Proceed to fetch fresh data
+    try {
+      final PaginatedDataResponse<Note>? recentNotes = await _service.fetchRecentNotes();
+
+      emit(state.copyWith(
+        recentNotes: recentNotes,
+        event: NoteEvents.fetchRecentNotesSuccess,
+      ));
+    } catch (error, stackTrace) {
+      CSLog.instance.error(
+        'Failed to fetch recent notes',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      emit(state.copyWith(
+        event: NoteEvents.fetchRecentNotesFailure,
+      ));
+    }
   }
 
-  _onUpdateNoteEvent(UpdateNoteEvent event, Emitter<NoteState> emit) async {
-    emit(state.copyWith(isloading: true));
-    await _cacheService.updateNote(event.note);
+  Future<void> _onDeleteNoteStart(NoteEvent event, Emitter<NoteState> emit) async {
+    // emit(state.copyWith(
+    //   event: NoteEvents.deleteNoteStart,
+    // ));
 
-    final notes = state.notes.map((note) {
-      return note.id == event.note.id ? event.note : note;
-    }).toList();
+    // try {
+    //   final bool isDeleted = await _service.deleteNote(
+    //     noteId: event.payload['noteId'],
+    //   );
 
-    final favoriteNotes = state.favoriteNotes.map((note) {
-      return note.id == event.note.id ? event.note : note;
-    }).toList();
+    //   if (isDeleted) {
+    //     emit(state.copyWith(
+    //       event: NoteEvents.deleteNoteSuccess,
+    //     ));
+    //     state.notes!.data.removeWhere((note) => note.id == event.payload['noteId']);
+    //     state.recentNotes!.data.removeWhere((note) => note.id == event.payload['noteId']);
+    //   }
 
-    emit(state.copyWith(isloading: false, notes: notes, favoriteNotes: favoriteNotes));
+    //   emit(state);
+    // } catch (error, stackTrace) {
+    //   CSLog.instance.error(
+    //     'Failed to delete note',
+    //     error: error,
+    //     stackTrace: stackTrace,
+    //   );
+
+    //   emit(state.copyWith(
+    //     event: NoteEvents.deleteNoteFailure,
+    //   ));
+    // }
   }
 
-  // ================== Favorite notes =====================
+  Future<void> _onUpdateNoteStart(NoteEvent event, Emitter<NoteState> emit) async {
+    // emit(state.copyWith(
+    //   event: NoteEvents.updateNoteStart,
+    // ));
 
-  _onAddNoteToFavoriteEvent(AddNoteToFavoriteEvent event, Emitter<NoteState> emit) async {
-    emit(state.copyWith(isloading: true));
-    await _cacheService.addNoteToFavorite(event.note);
+    // try {
+    //   final Note? note = await _service.updateNote(
+    //     noteId: event.payload['noteId'],
+    //     noteJson: event.payload['noteJson'],
+    //   );
 
-    final notes = state.notes.map((note) {
-      return note.id == event.note.id ? event.note : note;
-    }).toList();
+    //   if (note != null) {
+    //     emit(state.copyWith(
+    //       event: NoteEvents.updateNoteSuccess,
+    //     ));
+    //     final noteIndex = state.notes!.data.indexWhere((note) => note.id == event.payload['noteId']);
+    //     state.notes!.data[noteIndex] = note;
+    //     final recentNoteIndex = state.recentNotes!.data.indexWhere((note) => note.id == event.payload['noteId']);
+    //     state.recentNotes!.data[recentNoteIndex] = note;
+    //   }
 
-    emit(state.copyWith(isloading: false, notes: notes));
+    //   emit(state);
+    // } catch (error, stackTrace) {
+    //   CSLog.instance.error(
+    //     'Failed to update note',
+    //     error: error,
+    //     stackTrace: stackTrace,
+    //   );
+
+    //   emit(state.copyWith(
+    //     event: NoteEvents.updateNoteFailure,
+    //   ));
+    // }
   }
 
-  _onRemoveNoteFromFavoriteEvent(RemoveNoteFromFavoriteEvent event, Emitter<NoteState> emit) async {
-    emit(state.copyWith(isloading: true));
-    await _cacheService.removeNoteFromFavorites(event.note);
+  Future<void> _onfetchCategoriesStart(NoteEvent event, Emitter<NoteState> emit) async {
+    emit(state.copyWith(
+      event: NoteEvents.fetchCategoriesStart,
+    ));
 
-    final notes = state.notes.map((note) {
-      return note.id == event.note.id ? event.note : note;
-    }).toList();
+    final bool isForceRefresh = event.payload;
 
-    final favoriteNotes = state.favoriteNotes..removeWhere((note) => note.id == event.note.id);
+    final data = state.categories?.data;
+    final isExistData = data != null && data.isNotEmpty;
 
-    emit(state.copyWith(isloading: false, notes: notes, favoriteNotes: favoriteNotes));
+    // If there's existing data and it's not a forced refresh, emit the current state
+    if (isExistData && !isForceRefresh) {
+      emit(state.copyWith(event: NoteEvents.fetchCategoriesSuccess));
+      return;
+    }
+
+    // Proceed to fetch fresh data
+    try {
+      final PaginatedDataResponse<Category>? categories = await _service.fetchCategories();
+
+      emit(state.copyWith(
+        categories: categories,
+        event: NoteEvents.fetchCategoriesSuccess,
+      ));
+    } catch (error, stackTrace) {
+      CSLog.instance.error(
+        'Failed to fetch categories',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      emit(state.copyWith(
+        errorMessage: error.toString(),
+        event: NoteEvents.fetchCategoriesFailure,
+      ));
+    }
   }
 
-  _onFetchFavoriteNotesEvent(FetchFavoriteNotesEvent event, Emitter<NoteState> emit) async {
-    emit(state.copyWith(isloading: true));
-    final favoriteNotes = await _cacheService.fetchFavoriteNotes();
+  Future<void> _onAddCategoryStart(NoteEvent event, Emitter<NoteState> emit) async {
+    emit(state.copyWith(
+      event: NoteEvents.addCategoryStart,
+    ));
 
-    emit(state.copyWith(isloading: false, favoriteNotes: favoriteNotes));
+    try {
+      final Category? category = await _service.addCategory(categoryJson: event.payload);
+
+      if (category != null) {
+        emit(state.copyWith(
+          event: NoteEvents.addCategorySuccess,
+        ));
+
+        state.categories!.data.add(category);
+      }
+
+      emit(state);
+    } catch (error, stackTrace) {
+      CSLog.instance.error(
+        'Failed to add note',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      emit(state.copyWith(
+        event: NoteEvents.addCategoryFailure,
+      ));
+    }
   }
 
-  late final CacheServiceImpl _cacheService;
+  late final NoteService _service;
 }

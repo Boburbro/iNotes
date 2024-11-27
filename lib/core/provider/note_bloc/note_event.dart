@@ -1,37 +1,69 @@
-import 'package:note_app/core/models/note/note.dart';
+part of 'note_bloc.dart';
 
-sealed class NoteEvent {}
+enum NoteEvents {
+  addNoteStart,
+  addNoteSuccess,
+  addNoteFailure,
 
-class AddNoteEvent extends NoteEvent {
-  final Note note;
+  fetchNotesStart,
+  fetchNotesSuccess,
+  fetchNotesFailure,
 
-  AddNoteEvent({required this.note});
+  fetchRecentNotesStart,
+  fetchRecentNotesSuccess,
+  fetchRecentNotesFailure,
+
+  deleteNoteStart,
+  deleteNoteSuccess,
+  deleteNoteFailure,
+
+  updateNoteStart,
+  updateNoteSuccess,
+  updateNoteFailure,
+
+  fetchCategoriesStart,
+  fetchCategoriesSuccess,
+  fetchCategoriesFailure,
+
+  addCategoryStart,
+  addCategorySuccess,
+  addCategoryFailure,
 }
 
-class FetchNotesEvent extends NoteEvent {}
+class NoteEvent {
+  NoteEvents? event;
+  dynamic payload;
 
-class DeleteNoteEvent extends NoteEvent {
-  final Note note;
+  NoteEvent.addNoteStart({required Json noteJson}) {
+    event = NoteEvents.addNoteStart;
+    payload = noteJson;
+  }
 
-  DeleteNoteEvent({required this.note});
+  NoteEvent.fetchNotesStart({bool? isForceRefresh = false}) {
+    event = NoteEvents.fetchNotesStart;
+    payload = isForceRefresh;
+  }
+
+  NoteEvent.fetchRecentNotesStart({bool? isForceRefresh = false}) {
+    event = NoteEvents.fetchRecentNotesStart;
+    payload = isForceRefresh;
+  }
+
+  NoteEvent.deleteNoteStart({required this.payload}) {
+    event = NoteEvents.deleteNoteStart;
+  }
+
+  NoteEvent.updateNoteStart({required this.payload}) {
+    event = NoteEvents.updateNoteStart;
+  }
+
+  NoteEvent.fetchCategoriesStart({bool? isForceRefresh = false}) {
+    event = NoteEvents.fetchCategoriesStart;
+    payload = isForceRefresh;
+  }
+
+  NoteEvent.addCategoryStart({required Json categoryJson}) {
+    event = NoteEvents.addCategoryStart;
+    payload = categoryJson;
+  }
 }
-
-class UpdateNoteEvent extends NoteEvent {
-  final Note note;
-
-  UpdateNoteEvent({required this.note});
-}
-
-class AddNoteToFavoriteEvent extends NoteEvent {
-  final Note note;
-
-  AddNoteToFavoriteEvent({required this.note});
-}
-
-class RemoveNoteFromFavoriteEvent extends NoteEvent {
-  final Note note;
-
-  RemoveNoteFromFavoriteEvent({required this.note});
-}
-
-class FetchFavoriteNotesEvent extends NoteEvent {}
