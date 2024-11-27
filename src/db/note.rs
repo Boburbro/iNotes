@@ -76,18 +76,16 @@ pub fn fetch_notes_from_db(
 
 pub fn fetch_recent_notes_from_db(
     conn: &PooledConnection<SqliteConnectionManager>,
-    limit: u8,
-    offset: u16,
 ) -> Result<Vec<Note>, Error> {
     let sql = "
     SELECT id, title, content, category, created_at, updated_at 
     FROM notes
-    WHERE created_at >= DATE('now', '-1 days')
-    LIMIT ?1 OFFSET ?2";
+    ORDER BY created_at DESC
+    LIMIT 3";
 
     let mut stmt = conn.prepare(sql).unwrap();
 
-    let notes_iter = stmt.query_map([limit as u8, offset as u8], |row| {
+    let notes_iter = stmt.query_map([], |row| {
         Ok(Note {
             id: row.get("id")?,
             title: row.get("title")?,
