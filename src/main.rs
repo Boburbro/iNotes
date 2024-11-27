@@ -5,6 +5,7 @@ pub mod db;
 pub mod models;
 pub mod state;
 
+use actix_files::Files;
 use actix_web::{web, App, HttpServer};
 use r2d2::Pool;
 use r2d2_sqlite::SqliteConnectionManager;
@@ -29,7 +30,7 @@ async fn main() -> std::io::Result<()> {
             .service(api::fetch_notes)
             .service(api::fetch_recent_notes)
             .service(api::fetch_categories)
-        //.service(Files::new("/uploads", "./uploads").show_files_listing())
+            .service(Files::new("/uploads", "./uploads").show_files_listing())
     })
     .bind("127.0.0.1:8080")?
     .run()
