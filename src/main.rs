@@ -5,6 +5,8 @@ pub mod db;
 pub mod models;
 pub mod state;
 
+mod utils;
+
 use actix_files::Files;
 use actix_web::{web, App, HttpServer};
 use r2d2::Pool;
@@ -29,6 +31,7 @@ async fn main() -> std::io::Result<()> {
             .service(api::add_note)
             .service(api::fetch_notes)
             .service(api::fetch_recent_notes)
+            .service(api::add_category)
             .service(api::fetch_categories)
             .service(Files::new("/uploads", "./uploads").show_files_listing())
     })
