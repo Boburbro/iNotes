@@ -14,6 +14,8 @@ use serde_json::json;
 
 use crate::state::AppState;
 
+use super::NewNote;
+
 const BASE_URL: &str = "http://localhost:8080";
 
 #[derive(Deserialize, Debug, Clone)]
@@ -31,9 +33,7 @@ pub struct PathParams {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct JsonParams {
-    pub title: Option<String>,
-    pub content: Option<String>,
-    pub category: Option<String>,
+    pub new_note: NewNote,
 }
 
 #[derive(Deserialize)]
