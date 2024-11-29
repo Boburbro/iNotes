@@ -28,6 +28,8 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(data.clone())
+            .service(api::register)
+            .service(api::login)
             .service(api::add_note)
             .service(api::fetch_notes)
             .service(api::fetch_recent_notes)
