@@ -1,3 +1,4 @@
+use crate::utils::color_to_hex;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -15,11 +16,4 @@ pub struct NewCategory {
     pub name: String,
     pub avatar: Vec<u8>,
     pub color: u32,
-}
-
-fn color_to_hex<S>(color: &u32, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: serde::Serializer,
-{
-    serializer.serialize_str(&format!("0x{:08X}", color))
 }
