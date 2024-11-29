@@ -12,9 +12,9 @@ pub fn add_note_to_db(
     note: NewNote,
 ) -> Result<Note, Error> {
     match conn.execute(
-        "INSERT INTO notes (title, content, category, delta, created_at, updated_at) 
-        VALUES (?1, ?2, ?3, ?4, datetime('now'), NULL)",
-        params![note.title, note.content, note.category, note.delta],
+        "INSERT INTO notes (title, content, category, delta, created_at, updated_at, color) 
+        VALUES (?1, ?2, ?3, ?4, datetime('now'), NULL, ?5)",
+        params![note.title, note.content, note.category, note.delta, note.color],
     ) {
         Ok(_) => (),
         Err(e) => {
@@ -43,6 +43,7 @@ pub fn add_note_to_db(
         delta: note.delta,
         created_at: chrono::Utc::now().to_rfc3339(),
         updated_at: None,
+        color: note.color,
     })
 }
 
@@ -52,7 +53,7 @@ pub fn fetch_notes_from_db(
     offset: u16,
 ) -> Result<Vec<Note>, Error> {
     let sql = "
-    SELECT id, title, content, category, delta, created_at, updated_at 
+    SELECT id, title, content, category, delta, created_at, updated_at, color
     FROM notes
     LIMIT ?1 OFFSET ?2";
 
@@ -67,6 +68,7 @@ pub fn fetch_notes_from_db(
             delta: row.get("delta")?,
             created_at: row.get("created_at")?,
             updated_at: row.get("updated_at")?,
+            color: row.get("color")?,
         })
     })?;
 
@@ -83,7 +85,7 @@ pub fn fetch_recent_notes_from_db(
     conn: &PooledConnection<SqliteConnectionManager>,
 ) -> Result<Vec<Note>, Error> {
     let sql = "
-    SELECT id, title, content, category, delta, created_at, updated_at 
+    SELECT id, title, content, category, delta, created_at, updated_at, color
     FROM notes
     ORDER BY created_at DESC
     LIMIT 3";
@@ -99,6 +101,7 @@ pub fn fetch_recent_notes_from_db(
             category: row.get("category")?,
             created_at: row.get("created_at")?,
             updated_at: row.get("updated_at")?,
+            color: row.get("color")?,
         })
     })?;
 
