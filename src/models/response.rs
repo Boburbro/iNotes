@@ -14,8 +14,6 @@ use serde_json::json;
 
 use crate::state::AppState;
 
-use super::NewNote;
-
 const BASE_URL: &str = "http://localhost:8080";
 
 #[derive(Deserialize, Debug, Clone)]
@@ -32,9 +30,7 @@ pub struct PathParams {
 }
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct JsonParams {
-    pub new_note: NewNote,
-}
+pub struct JsonParams {}
 
 #[derive(Deserialize)]
 pub struct PaginationParams {
