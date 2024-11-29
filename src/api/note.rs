@@ -6,7 +6,7 @@ use serde_json::json;
 use crate::{
     db,
     models::{
-        ApiResponse, JsonParams, NewCategory, QueryParams, RequestContext, RequestContextParams,
+        ApiResponse, NewCategory, NewNote, QueryParams, RequestContext, RequestContextParams,
         ResponseBuilder,
     },
     state::AppState,
@@ -14,12 +14,17 @@ use crate::{
 
 #[post("/note")]
 async fn add_note(
-    json: web::Json<JsonParams>,
+    multipart: Multipart,
     req: HttpRequest,
     data: web::Data<AppState>,
 ) -> impl Responder {
+    let multipart_params = match RequestContext::process_multipart(multipart).await {
+        Ok(data) => Some(data),
+        Err(err) => return err,
+    };
+
     let params = RequestContextParams {
-        json_params: Some(json.into_inner()),
+        multipart_params,
         ..Default::default()
     };
 
@@ -28,18 +33,68 @@ async fn add_note(
         Err(err) => return err,
     };
 
-    let json_params = context.params.json_params.unwrap();
+    if let Some(multipart_data) = context.params.multipart_params {
+        let title = multipart_data
+            .get("title")
+            .and_then(|v| String::from_utf8(v.clone()).ok())
+            .filter(|s| !s.is_empty());
 
-    let note = json_params.new_note;
+        let content = multipart_data
+            .get("content")
+            .and_then(|v| String::from_utf8(v.clone()).ok())
+            .filter(|s| !s.is_empty());
 
-    match db::add_note_to_db(&context.conn, note) {
-        Ok(note) => HttpResponse::Ok().json(note),
-        Err(e) => {
-            error!("Failed to add note to database: {}", e);
-            HttpResponse::InternalServerError().json(json!({
-                "message": "Internal Server Error"
-            }))
+        let category = multipart_data
+            .get("category")
+            .and_then(|v| String::from_utf8(v.clone()).ok())
+            .filter(|s| !s.is_empty());
+
+        let delta = multipart_data
+            .get("delta")
+            .and_then(|v| String::from_utf8(v.clone()).ok())
+            .filter(|s| !s.is_empty());
+
+        let color = multipart_data.get("color").and_then(|v| {
+            let color_str = String::from_utf8(v.clone()).ok()?;
+            let color_str = color_str.trim_start_matches("0x");
+            u32::from_str_radix(color_str, 16).ok()
+        });
+
+        let missing_fields: Vec<&str> = [
+            ("title", title.is_none()),
+            ("content", content.is_none()),
+            ("category", category.is_none()),
+            ("delta", delta.is_none()),
+            ("color", color.is_none()),
+        ]
+        .iter()
+        .filter_map(|(field, is_missing)| if *is_missing { Some(*field) } else { None })
+        .collect();
+
+        if !missing_fields.is_empty() {
+            return HttpResponse::BadRequest()
+                .body(format!("Missing required fields: {:?}", missing_fields));
         }
+
+        let new_note = NewNote {
+            title: title.unwrap(),
+            content: content.unwrap(),
+            category: category.unwrap(),
+            delta: Some(delta.unwrap()),
+            color: color.unwrap(),
+        };
+
+        match db::add_note_to_db(&context.conn, new_note) {
+            Ok(note) => HttpResponse::Created().json(note),
+            Err(e) => {
+                error!("Failed to add note to database: {}", e);
+                HttpResponse::InternalServerError().json(json!({
+                    "message": "Internal Server Error"
+                }))
+            }
+        }
+    } else {
+        return HttpResponse::BadRequest().body("Invalid multipart data");
     }
 }
 
