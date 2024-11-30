@@ -16,15 +16,16 @@ class NoteService {
   NoteService._() : _dio = ApiClient.instance.dio;
 
   Future<Note?> addNote({required Map<String, dynamic> noteJson}) async {
-    final data = {
+    final formData = FormData.fromMap({
       'title': noteJson['title'],
       'content': noteJson['content'],
       'category': noteJson['category'],
       'delta': noteJson['delta'],
-    };
+      'color': colorToHex(noteJson['color']),
+    });
 
     try {
-      final response = await _dio.post('/note', data: data);
+      final response = await _dio.post('/note', data: formData);
       if (response.statusCode == 201) {
         return Note.fromJson(response.data);
       }
@@ -42,8 +43,8 @@ class NoteService {
     try {
       final response = await _dio.get('/notes');
       if (response.statusCode == 200) {
-        final products = PaginatedDataResponse<Note>.fromJson(response.data, Note.fromJson);
-        return products;
+        final notes = PaginatedDataResponse<Note>.fromJson(response.data, Note.fromJson);
+        return notes;
       }
       throw 'Failed to load notes';
     } on DioException catch (exception) {
@@ -58,8 +59,8 @@ class NoteService {
     try {
       final response = await _dio.get('/recent-notes');
       if (response.statusCode == 200) {
-        final products = PaginatedDataResponse<Note>.fromJson(response.data, Note.fromJson);
-        return products;
+        final recentNotes = PaginatedDataResponse<Note>.fromJson(response.data, Note.fromJson);
+        return recentNotes;
       }
       throw 'Failed to load recent notes';
     } on DioException catch (exception) {
@@ -74,8 +75,8 @@ class NoteService {
     try {
       final response = await _dio.get('/categories');
       if (response.statusCode == 200) {
-        final products = PaginatedDataResponse<Category>.fromJson(response.data, Category.fromJson);
-        return products;
+        final categories = PaginatedDataResponse<Category>.fromJson(response.data, Category.fromJson);
+        return categories;
       }
       throw 'Failed to load categories';
     } on DioException catch (exception) {
@@ -88,15 +89,16 @@ class NoteService {
 
   Future<Category?> addCategory({required Json categoryJson}) async {
     try {
-      final data = FormData.fromMap({
+      final formData = FormData.fromMap({
         'name': categoryJson['name'],
+        'color': colorToHex(categoryJson['color']),
         'avatar': MultipartFile.fromBytes(
           categoryJson['avatar'],
           filename: 'avatar.png',
-          contentType: DioMediaType('image', 'png'), // Uygun MIME türü belirtin.
+          contentType: DioMediaType('image', 'png'),
         ),
       });
-      final response = await _dio.post('/category', data: data);
+      final response = await _dio.post('/category', data: formData);
       if (response.statusCode == 201) {
         return Category.fromJson(response.data);
       }
@@ -107,5 +109,9 @@ class NoteService {
       CSLog.instance.debug('Add Category Error Message: $e');
       throw 'Failed to add category';
     }
+  }
+
+  String colorToHex(int value) {
+    return '0x${value.toRadixString(16).toUpperCase()}';
   }
 }
