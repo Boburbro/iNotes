@@ -15,8 +15,7 @@ async fn login(data: web::Data<AppState>, form: web::Json<LoginForm>) -> impl Re
         .get()
         .map_err(|e| {
             error!("Failed to get connection from pool: {}", e);
-            return HttpResponse::InternalServerError()
-                .json(json!({"message:":"Internal Server Error"}));
+            return HttpResponse::InternalServerError().json(json!({"message:":e.to_string()}));
         })
         .unwrap();
 
