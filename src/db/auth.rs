@@ -40,6 +40,11 @@ pub fn login(username: &str, password: &str, conn: &Connection) -> Result<User, 
                 ))
             }
         }
+        Err(Error::QueryReturnedNoRows) => Err(Error::SqliteFailure(
+            rusqlite::ffi::Error::new(rusqlite::ffi::SQLITE_INTERNAL),
+            Some("User not found".to_string()),
+        )),
+
         Err(_) => Err(Error::SqliteFailure(
             rusqlite::ffi::Error::new(rusqlite::ffi::SQLITE_INTERNAL),
             Some("Internal server error".to_string()),
