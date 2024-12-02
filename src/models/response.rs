@@ -18,11 +18,12 @@ const BASE_URL: &str = "http://localhost:8080";
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct QueryParams {
-    pub note_id: Option<u64>,
+    pub note_id: Option<u32>,
     pub user_id: Option<u32>,
     pub page: Option<u16>,
     pub per_page: Option<u8>,
     pub category: Option<String>,
+    pub category_id: Option<u32>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -31,7 +32,15 @@ pub struct PathParams {
 }
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct JsonParams {}
+pub struct JsonParams {
+    pub user_id: Option<u32>,
+    pub note_id: Option<u32>,
+    pub category_id: Option<u32>,
+    pub title: Option<String>,
+    pub content: Option<String>,
+    pub category: Option<String>,
+    pub delta: Option<String>,
+}
 
 #[derive(Deserialize)]
 pub struct PaginationParams {
