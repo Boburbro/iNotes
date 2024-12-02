@@ -3,10 +3,16 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct User {
-    pub id: i32,
+    pub id: u32,
     pub avatar: Option<String>,
     pub username: String,
     pub email: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct NewUser {
+    pub id: u32,
+    pub avatar: Option<Vec<u8>>,
 }
 
 #[derive(Deserialize)]
