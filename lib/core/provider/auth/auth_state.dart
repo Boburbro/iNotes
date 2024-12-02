@@ -16,6 +16,6 @@ class AuthenticationState {
   }
 
   factory AuthenticationState.initial() {
-    return AuthenticationState(event: null, authResponse: null);
+    return AuthenticationState(event: null, authResponse: null, user: null);
   }
 }

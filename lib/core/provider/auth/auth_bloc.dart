@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:inotes/core/models/auth_form.dart';
 import 'package:inotes/core/models/user.dart';
@@ -32,7 +31,7 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
 
   Future<void> _onCheckAuthentication(AuthenticationEvent event, Emitter<AuthenticationState> emit) async {
     emit(state.copyWith(event: AuthenticationEvents.checkAuthentication));
-    await Future.delayed(Durations.extralong4 * 2);
+
     try {
       final user = await _secureStorageCacheService.getUser();
       if (user != null) {
@@ -58,18 +57,12 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
         password: event.payload.password,
       );
       final loginResponse = await _authenticationService.login(loginForm);
-
       if (loginResponse.successResponse != null) {
         final user = loginResponse.successResponse!.user;
         await _secureStorageCacheService.setUser(user);
 
         emit(state.copyWith(
           event: AuthenticationEvents.loginSuccess,
-          authResponse: loginResponse,
-        ));
-      } else {
-        emit(state.copyWith(
-          event: AuthenticationEvents.loginFailure,
           authResponse: loginResponse,
         ));
       }
@@ -82,7 +75,7 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
 
       emit(state.copyWith(
         event: AuthenticationEvents.loginFailure,
-        authResponse: AuthResponse(failureResponse: FailureResponse(error: error.toString())),
+        authResponse: AuthResponse(failureResponse: FailureResponse(message: error.toString())),
       ));
     }
   }
@@ -120,7 +113,7 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
 
       emit(state.copyWith(
         event: AuthenticationEvents.registerFailure,
-        authResponse: AuthResponse(failureResponse: FailureResponse(error: error.toString())),
+        authResponse: AuthResponse(failureResponse: FailureResponse(message: error.toString())),
       ));
     }
   }
@@ -128,7 +121,7 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
   Future<void> _onLogout(AuthenticationEvent event, Emitter<AuthenticationState> emit) async {
     emit(state.copyWith(event: AuthenticationEvents.logoutStart));
     try {
-      await _secureStorageCacheService.clearCache();
+      await _secureStorageCacheService.setUser(null);
       emit(state.copyWith(event: AuthenticationEvents.unauthenticated));
     } catch (error, stackTrace) {
       CSLog.instance.error(
