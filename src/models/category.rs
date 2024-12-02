@@ -3,7 +3,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Category {
-    pub id: u64,
+    pub id: u32,
+    pub user_id: u32,
     pub name: String,
     pub avatar: String,
     pub notes_count: u64,
@@ -13,6 +14,7 @@ pub struct Category {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NewCategory {
+    pub user_id: u32,
     pub name: String,
     pub avatar: Vec<u8>,
     pub color: u32,
