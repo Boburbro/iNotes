@@ -1,8 +1,8 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:inotes/core/models/auth_form.dart';
 import 'package:inotes/core/models/user.dart';
 import 'package:inotes/core/service/api_client.dart';
-import 'package:inotes/core/service/dio_helper.dart';
 import 'package:inotes/core/types.dart';
 
 final class AuthenticationService {
@@ -25,7 +25,8 @@ final class AuthenticationService {
       }
       throw 'Failed to login';
     } on DioException catch (exception) {
-      throw AuthResponse.failure(DioErrorHelper.handle(exception));
+      final error = jsonDecode(exception.response?.data);
+      throw error['message'];
     } catch (e) {
       throw 'Failed to login';
     }
@@ -45,34 +46,22 @@ final class AuthenticationService {
       }
       throw 'Failed to register';
     } on DioException catch (exception) {
-      throw AuthResponse.failure(DioErrorHelper.handle(exception));
+      final error = jsonDecode(exception.response?.data);
+      throw error['message'];
     } catch (e) {
       throw 'Failed to register';
     }
   }
 }
 
-final class FailureResponse {
-  FailureResponse({required this.error});
+class FailureResponse {
+  final String message;
 
-  final String error;
+  FailureResponse({required this.message});
 
-  factory FailureResponse.fromMap(dynamic json) {
-    return FailureResponse(error: _findErrorMessageRecursive(json['message'] ?? json));
+  factory FailureResponse.fromMap(Map<String, dynamic> map) {
+    return FailureResponse(message: map['message']);
   }
-
-  static String _findErrorMessageRecursive(dynamic object) {
-    if (object is Map<String, dynamic>) {
-      return _findErrorMessageRecursive(object.values.first);
-    } else if (object is List<dynamic>) {
-      return _findErrorMessageRecursive(object.first);
-    } else if (object is String) {
-      return object;
-    }
-    return 'Unknown error';
-  }
-
-  Map<String, dynamic> toMap() => {'error': error};
 }
 
 class SuccessResponse {
