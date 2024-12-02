@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct Note {
     pub id: u32,
+    pub user_id: u32,
+    pub category_id: u32,
     pub title: String,
     pub content: String,
     pub category: String,
@@ -16,6 +18,8 @@ pub struct Note {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NewNote {
+    pub user_id: u32,
+    pub category_id: u32,
     pub title: String,
     pub content: String,
     pub delta: Option<String>,
