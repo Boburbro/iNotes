@@ -1,18 +1,21 @@
 import 'dart:convert';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:inotes/core/models/category.dart';
+import 'package:inotes/core/models/user.dart';
+import 'package:inotes/core/types.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-abstract class CacheService {
-  Future setNoteCategories(String category);
-  Future<List<Category>> getNoteCategories();
+abstract class ICacheService {
+  Future setCategory(Json category);
+  Future<List<Category>> getCategories();
 
   Future<void> changeTheme(String theme);
   Future<String?> getTheme();
 }
 
-class CacheServiceImpl implements CacheService {
-  CacheServiceImpl() {
+class CacheService implements ICacheService {
+  CacheService() {
     _sharedPreferences = SharedPreferences.getInstance();
   }
 
@@ -29,19 +32,94 @@ class CacheServiceImpl implements CacheService {
   }
 
   @override
-  Future setNoteCategories(String category) async {
-    final categories = await getNoteCategories();
-    final categoriesJsons = categories.map((category) => category.toJson()).toList();
-    final encodedCategories = jsonEncode(categoriesJsons);
-    (await _sharedPreferences).setString('categories', encodedCategories);
+  Future setCategory(Json category) async {
+    final categoryStr = jsonEncode(category);
+    (await _sharedPreferences).setString(category['name'], categoryStr);
   }
 
   @override
-  Future<List<Category>> getNoteCategories() async {
-    final categories = (await _sharedPreferences).getString('categories');
-    if (categories == null) return Future.value(<Category>[]);
+  Future<List<Category>> getCategories() async {
+    final categoriesMap = await getAllPreferences();
+    List<Category> categories = [];
 
-    final decodedCategories = jsonDecode(categories) as List;
-    return Future.value(decodedCategories.map((category) => Category.fromJson(category)).toList());
+    for (var value in categoriesMap.values) {
+      if (value is String) {
+        final decodedValue = jsonDecode(value);
+        categories.add(Category.fromJson(decodedValue));
+      }
+    }
+
+    return categories;
+  }
+
+  Future<Map<String, dynamic>> getAllPreferences() async {
+    Map<String, dynamic> allPrefs = {};
+    Set<String> keys = (await _sharedPreferences).getKeys();
+
+    for (String key in keys) {
+      allPrefs[key] = (await _sharedPreferences).get(key);
+    }
+
+    return allPrefs;
+  }
+}
+
+abstract class ISecureStorageCacheService {
+  Future<void> setUser(User user);
+  Future<User?> getUser();
+
+  Future<void> clearCache();
+}
+
+class SecureStorageCacheService implements ISecureStorageCacheService {
+  static SecureStorageCacheService? _instance;
+  late final FlutterSecureStorage _secureStorage;
+
+  SecureStorageCacheService._();
+
+  // Initialize method that should be called during app startup
+  static Future<void> init() async {
+    if (_instance == null) {
+      _instance = SecureStorageCacheService._();
+      _instance!._secureStorage = const FlutterSecureStorage();
+    }
+  }
+
+  // Instance getter that throws if not initialized
+  static SecureStorageCacheService get instance {
+    if (_instance == null) {
+      throw StateError('SecureStorageCacheService must be initialized before using it. '
+          'Call SecureStorageCacheService.init() first.');
+    }
+    return _instance!;
+  }
+
+  @override
+  Future<void> setUser(User? user) async {
+    if (user == null) {
+      await _secureStorage.delete(key: 'user');
+      return;
+    }
+    final userJson = user.toJson();
+    final encodedUserJson = jsonEncode(userJson);
+    await _secureStorage.write(key: 'user', value: encodedUserJson);
+  }
+
+  @override
+  Future<User?> getUser() async {
+    final encodedUserJson = await _secureStorage.read(key: 'user');
+    if (encodedUserJson == null) return null;
+
+    try {
+      final userJson = jsonDecode(encodedUserJson);
+      return User.fromJson(userJson);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  @override
+  Future<void> clearCache() async {
+    await _secureStorage.deleteAll();
   }
 }
