@@ -1,12 +1,12 @@
 use actix_multipart::Multipart;
-use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
+use actix_web::{delete, get, post, put, web, HttpRequest, HttpResponse, Responder};
 use log::error;
 use serde_json::json;
 
 use crate::{
     db,
     models::{
-        ApiResponse, NewCategory, NewNote, QueryParams, RequestContext, RequestContextParams,
+        ApiResponse, JsonParams, NewNote, QueryParams, RequestContext, RequestContextParams,
         ResponseBuilder,
     },
     state::AppState,
@@ -34,6 +34,16 @@ async fn add_note(
     };
 
     if let Some(multipart_data) = context.params.multipart_params {
+        let user_id = multipart_data
+            .get("user_id")
+            .and_then(|v| String::from_utf8(v.clone()).ok())
+            .and_then(|v| v.parse::<u32>().ok());
+
+        let category_id = multipart_data
+            .get("category_id")
+            .and_then(|v| String::from_utf8(v.clone()).ok())
+            .and_then(|v| v.parse::<u32>().ok());
+
         let title = multipart_data
             .get("title")
             .and_then(|v| String::from_utf8(v.clone()).ok())
@@ -61,6 +71,8 @@ async fn add_note(
         });
 
         let missing_fields: Vec<&str> = [
+            ("user_id", user_id.is_none()),
+            ("category_id", category_id.is_none()),
             ("title", title.is_none()),
             ("content", content.is_none()),
             ("category", category.is_none()),
@@ -77,6 +89,8 @@ async fn add_note(
         }
 
         let new_note = NewNote {
+            user_id: user_id.unwrap(),
+            category_id: category_id.unwrap(),
             title: title.unwrap(),
             content: content.unwrap(),
             category: category.unwrap(),
@@ -115,8 +129,15 @@ async fn fetch_notes(
     };
 
     let pagination = context.pagination();
+    let query_params = context.params.query_params.unwrap();
+    let user_id = query_params.user_id.unwrap();
 
-    match db::fetch_notes_from_db(&context.conn, pagination.per_page, pagination.offset) {
+    match db::fetch_notes_from_db(
+        &context.conn,
+        pagination.per_page,
+        pagination.offset,
+        user_id,
+    ) {
         Ok(notes) => {
             let total = notes.len() as u32;
             let response = ApiResponse::build(notes, total, &pagination);
@@ -125,7 +146,49 @@ async fn fetch_notes(
         Err(e) => {
             error!("Failed to fetch notes from database: {}", e);
             HttpResponse::InternalServerError().json(json!({
-                "message": "Internal Server Error"
+                "message": e.to_string()
+            }))
+        }
+    }
+}
+
+#[get("/notes-by-category")]
+async fn fetch_notes_by_category(
+    req: HttpRequest,
+    data: web::Data<AppState>,
+    query: web::Query<QueryParams>,
+) -> impl Responder {
+    let params = RequestContextParams {
+        query_params: Some(query.into_inner()),
+        ..Default::default()
+    };
+
+    let context = match RequestContext::new(req, &data, params) {
+        Ok(ctx) => ctx,
+        Err(err) => return err,
+    };
+
+    let pagination = context.pagination();
+    let query_params = context.params.query_params.unwrap();
+    let user_id = query_params.user_id.unwrap();
+    let category_id = query_params.category_id.unwrap();
+
+    match db::fetch_notes_by_category_from_db(
+        &context.conn,
+        pagination.per_page,
+        pagination.offset,
+        user_id,
+        category_id,
+    ) {
+        Ok(notes) => {
+            let total = notes.len() as u32;
+            let response = ApiResponse::build(notes, total, &pagination);
+            HttpResponse::Ok().json(response)
+        }
+        Err(e) => {
+            error!("Failed to fetch notes from database: {}", e);
+            HttpResponse::InternalServerError().json(json!({
+                "message": e.to_string()
             }))
         }
     }
@@ -148,8 +211,10 @@ async fn fetch_recent_notes(
     };
 
     let pagination = context.pagination();
+    let query_params = context.params.query_params.unwrap();
+    let user_id = query_params.user_id.unwrap();
 
-    match db::fetch_recent_notes_from_db(&context.conn) {
+    match db::fetch_recent_notes_from_db(&context.conn, user_id) {
         Ok(notes) => {
             let total = notes.len() as u32;
             let response = ApiResponse::build(notes, total, &pagination);
@@ -164,9 +229,14 @@ async fn fetch_recent_notes(
     }
 }
 
-#[get("/categories")]
-async fn fetch_categories(req: HttpRequest, data: web::Data<AppState>) -> impl Responder {
+#[delete("/note")]
+async fn delete_note(
+    req: HttpRequest,
+    data: web::Data<AppState>,
+    query: web::Query<QueryParams>,
+) -> impl Responder {
     let params = RequestContextParams {
+        query_params: Some(query.into_inner()),
         ..Default::default()
     };
 
@@ -175,36 +245,30 @@ async fn fetch_categories(req: HttpRequest, data: web::Data<AppState>) -> impl R
         Err(err) => return err,
     };
 
-    let pagination = context.pagination();
+    let query_params = context.params.query_params.unwrap();
+    let user_id = query_params.user_id.unwrap();
+    let note_id = query_params.note_id.unwrap();
+    let category_id = query_params.category_id.unwrap();
 
-    match db::fetch_categories_from_db(&context.conn) {
-        Ok(categories) => {
-            let total = categories.len() as u32;
-            let response = ApiResponse::build(categories, total, &pagination);
-            HttpResponse::Ok().json(response)
-        }
+    match db::delete_note_from_db(&context.conn, note_id, user_id, category_id) {
+        Ok(_) => HttpResponse::NoContent().finish(),
         Err(e) => {
-            error!("Failed to fetch categories from database: {}", e);
+            error!("Failed to delete note from database: {}", e);
             HttpResponse::InternalServerError().json(json!({
-                "message": "Internal Server Error"
+                "message": e.to_string()
             }))
         }
     }
 }
 
-#[post("/category")]
-async fn add_category(
-    multipart: Multipart,
+#[put("/note")]
+async fn update_note(
     req: HttpRequest,
     data: web::Data<AppState>,
+    json: web::Json<JsonParams>,
 ) -> impl Responder {
-    let multipart_params = match RequestContext::process_multipart(multipart).await {
-        Ok(data) => Some(data),
-        Err(err) => return err,
-    };
-
     let params = RequestContextParams {
-        multipart_params,
+        json_params: Some(json.into_inner()),
         ..Default::default()
     };
 
@@ -213,52 +277,24 @@ async fn add_category(
         Err(err) => return err,
     };
 
-    if let Some(multipart_data) = context.params.multipart_params {
-        let name = multipart_data
-            .get("name")
-            .and_then(|v| String::from_utf8(v.clone()).ok())
-            .filter(|s| !s.is_empty());
+    let json_params = context.params.json_params.unwrap();
+    let user_id = json_params.user_id.unwrap();
+    let note_id = json_params.note_id.unwrap();
+    let title = json_params.title.as_ref().map(|s| s.as_str()).unwrap_or("");
+    let content = json_params
+        .content
+        .as_ref()
+        .map(|s| s.as_str())
+        .unwrap_or("");
+    let delta = json_params.delta.as_ref().map(|s| s.as_str()).unwrap_or("");
 
-        let color = multipart_data.get("color").and_then(|v| {
-            let color_str = String::from_utf8(v.clone()).ok()?;
-            let color_str = color_str.trim_start_matches("0x");
-            u32::from_str_radix(color_str, 16).ok()
-        });
-
-        let avatar: Option<Vec<u8>> = multipart_data
-            .iter()
-            .filter(|(key, value)| key.starts_with("avatar") && !value.is_empty())
-            .next()
-            .map(|(_, value)| value.clone());
-
-        let missing_fields: Vec<&str> = [
-            ("name", name.is_none()),
-            ("avatar", avatar.is_none()),
-            ("color", color.is_none()),
-        ]
-        .iter()
-        .filter_map(|(field, is_missing)| if *is_missing { Some(*field) } else { None })
-        .collect();
-
-        if !missing_fields.is_empty() {
-            return HttpResponse::BadRequest()
-                .body(format!("Missing required fields: {:?}", missing_fields));
+    match db::update_note_in_db(&context.conn, note_id, user_id, title, content, delta) {
+        Ok(note) => HttpResponse::Ok().json(note),
+        Err(e) => {
+            error!("Failed to update note in database: {}", e);
+            HttpResponse::InternalServerError().json(json!({
+                "message": e.to_string()
+            }))
         }
-
-        let new_category = NewCategory {
-            name: name.unwrap(),
-            color: color.unwrap(),
-            avatar: avatar.unwrap(),
-        };
-
-        match db::add_category_to_db(&context.conn, new_category) {
-            Ok(product) => HttpResponse::Created().json(product),
-            Err(err) => {
-                println!("Error adding category to database: {:?}", err);
-                HttpResponse::BadRequest().json(json!({"message": err.to_string()}))
-            }
-        }
-    } else {
-        return HttpResponse::BadRequest().body("Invalid multipart data");
     }
 }
