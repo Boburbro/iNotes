@@ -9,6 +9,10 @@ enum NoteEvents {
   fetchNotesSuccess,
   fetchNotesFailure,
 
+  fetchNotesByCategoryStart,
+  fetchNotesByCategorySuccess,
+  fetchNotesByCategoryFailure,
+
   fetchRecentNotesStart,
   fetchRecentNotesSuccess,
   fetchRecentNotesFailure,
@@ -39,14 +43,17 @@ class NoteEvent {
     payload = noteJson;
   }
 
-  NoteEvent.fetchNotesStart({bool? isForceRefresh = false}) {
-    event = NoteEvents.fetchNotesStart;
-    payload = isForceRefresh;
+  // NoteEvent.fetchNotesStart({this.payload}) {
+  //   event = NoteEvents.fetchNotesStart;
+  // }
+
+  NoteEvent.fetchNotesByCategoryStart({required this.payload}) {
+    // payload - categoryId, userId, categoryName
+    event = NoteEvents.fetchNotesByCategoryStart;
   }
 
-  NoteEvent.fetchRecentNotesStart({bool? isForceRefresh = false}) {
+  NoteEvent.fetchRecentNotesStart({this.payload}) {
     event = NoteEvents.fetchRecentNotesStart;
-    payload = isForceRefresh;
   }
 
   NoteEvent.deleteNoteStart({required this.payload}) {
@@ -57,9 +64,8 @@ class NoteEvent {
     event = NoteEvents.updateNoteStart;
   }
 
-  NoteEvent.fetchCategoriesStart({bool? isForceRefresh = false}) {
+  NoteEvent.fetchCategoriesStart({this.payload}) {
     event = NoteEvents.fetchCategoriesStart;
-    payload = isForceRefresh;
   }
 
   NoteEvent.addCategoryStart({required Json categoryJson}) {
