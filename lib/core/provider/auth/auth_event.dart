@@ -15,6 +15,10 @@ enum AuthenticationEvents {
   checkAuthentication,
   authenticated,
   unauthenticated,
+
+  deleteAccountStart,
+  deleteAccountSuccess,
+  deleteAccountFailure,
 }
 
 class AuthenticationEvent {
@@ -37,5 +41,9 @@ class AuthenticationEvent {
 
   AuthenticationEvent.checkAuthentication() {
     type = AuthenticationEvents.checkAuthentication;
+  }
+
+  AuthenticationEvent.deleteAccountStart({this.payload}) {
+    type = AuthenticationEvents.deleteAccountStart;
   }
 }

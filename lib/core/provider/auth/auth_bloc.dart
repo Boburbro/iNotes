@@ -24,6 +24,9 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
         case AuthenticationEvents.checkAuthentication:
           await _onCheckAuthentication(event, emit);
           break;
+        case AuthenticationEvents.deleteAccountStart:
+          await _onDeleteAccountStart(event, emit);
+          break;
         default:
       }
     });
@@ -131,6 +134,31 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
       );
       emit(state.copyWith(
         event: AuthenticationEvents.logoutFailure,
+      ));
+    }
+  }
+
+  Future<void> _onDeleteAccountStart(AuthenticationEvent event, Emitter<AuthenticationState> emit) async {
+    emit(state.copyWith(event: AuthenticationEvents.deleteAccountStart));
+
+    try {
+      await _authenticationService.deleteAccount(userId: event.payload['user_id']).then((result) async {
+        if (result == null) return;
+        if (result) {
+          await _secureStorageCacheService.setUser(null);
+          emit(state.copyWith(event: AuthenticationEvents.deleteAccountSuccess));
+          emit(state.copyWith(event: AuthenticationEvents.unauthenticated));
+        }
+      });
+    } catch (error, stackTrace) {
+      CSLog.instance.error(
+        'Failed to delete account',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      emit(state.copyWith(
+        event: AuthenticationEvents.deleteAccountFailure,
       ));
     }
   }
