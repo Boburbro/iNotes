@@ -182,4 +182,20 @@ class NoteService {
   String colorToHex(int value) {
     return '0x${value.toRadixString(16).toUpperCase()}';
   }
+
+  Future<PaginatedDataResponse<Note>?> searchforNotes({required String query}) async {
+    try {
+      final response = await _dio.post('/notes/$query');
+      if (response.statusCode == 200) {
+        final notes = PaginatedDataResponse<Note>.fromJson(response.data, Note.fromJson);
+        return notes;
+      }
+      throw 'Failed to load notes';
+    } on DioException catch (exception) {
+      throw DioErrorHelper.handle(exception);
+    } catch (e) {
+      CSLog.instance.debug('Fetch Notes Error Message: $e');
+      throw 'Failed to load notes';
+    }
+  }
 }
