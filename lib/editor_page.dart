@@ -139,13 +139,22 @@ class _AdvancedRichTextEditorState extends State<AdvancedRichTextEditor> {
                 );
                 Navigator.pop(context);
               }
+              if (state.event == NoteEvents.updateNoteSuccess) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Note updated successfully'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+                Navigator.pop(context);
+              }
             },
             builder: (context, state) {
-              if (state.event == NoteEvents.addNoteStart) {
+              if (state.event == NoteEvents.addNoteStart || state.event == NoteEvents.updateNoteStart) {
                 return const Center(child: CircularProgressIndicator());
               }
               return TextButton(
-                onPressed: (widget.existingNote != null) ? _saveNote : _updateNote,
+                onPressed: (widget.existingNote != null) ? _updateNote : _saveNote,
                 child: Text(
                   (widget.existingNote != null) ? 'Update' : 'Done',
                   style: const TextStyle(color: Colors.black, fontSize: 18),
