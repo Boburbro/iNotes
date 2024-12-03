@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:inotes/core/provider/note_bloc/note_bloc.dart';
+import 'package:inotes/core/service/local/cache_service.dart';
 import 'package:inotes/editor_page.dart';
+import 'package:inotes/profile_header.dart';
 import 'package:inotes/view/pages/add_category_page.dart';
+import 'package:inotes/view/pages/category_selector_sheet.dart';
+import 'package:inotes/view/pages/notes_view.dart';
 import 'package:inotes/view/utilities/colors.dart';
+import 'package:inotes/view/utilities/utils.dart';
 
 class NotesPage extends StatelessWidget {
   const NotesPage({super.key});
@@ -25,26 +30,7 @@ class NotesPage extends StatelessWidget {
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     children: [
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Hello, Rasul',
-                                style: TextStyle(color: Colors.black),
-                              ),
-                              Text(
-                                'My Notes',
-                                style: TextStyle(color: Colors.black, fontSize: 30),
-                              ),
-                            ],
-                          ),
-                          CircleAvatar(),
-                        ],
-                      ),
+                      const ProfileHeader(),
                       const SizedBox(height: 16),
                       TextField(
                         decoration: InputDecoration(
@@ -94,7 +80,7 @@ class NotesPage extends StatelessWidget {
               // Recent Notes List
               SliverToBoxAdapter(
                 child: SizedBox(
-                  height: 140,
+                  height: 150,
                   child: BlocBuilder<NoteBloc, NoteState>(
                     builder: (context, state) {
                       if (state.event == NoteEvents.fetchRecentNotesStart) {
@@ -102,6 +88,7 @@ class NotesPage extends StatelessWidget {
                       }
 
                       final recentNotes = state.recentNotes?.data;
+                      final categories = state.categories?.data;
 
                       if (recentNotes == null) {
                         return const Center(child: CircularProgressIndicator());
@@ -117,29 +104,49 @@ class NotesPage extends StatelessWidget {
                           final recentNote = recentNotes[index];
                           return GestureDetector(
                             onTap: () {
+                              final category = categories!.firstWhere((category) {
+                                return category.name == recentNote.category;
+                              });
+
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => AdvancedRichTextEditor(
-                                    category: recentNote.category,
+                                    category: category,
+                                    existingNote: recentNote,
                                   ),
                                 ),
                               );
                             },
+                            onLongPress: () => ViewUtils.showAdvancedDeleteNoteBottomSheet(
+                              context,
+                              noteId: recentNote.id,
+                              categoryId: recentNote.categoryId,
+                              categoryName: recentNote.category,
+                              userId: recentNote.userId,
+                            ),
                             child: Container(
                               margin: const EdgeInsets.all(16.0),
                               padding: const EdgeInsets.all(16.0),
                               width: 200,
                               decoration: BoxDecoration(
-                                color: AppColors.primaryGreen,
+                                color: Color(recentNote.color),
                                 borderRadius: BorderRadius.circular(25.0),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(recentNote.title, style: const TextStyle(fontSize: 20)),
+                                  Text(
+                                    recentNote.title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
                                   const SizedBox(height: 8),
-                                  Text(recentNote.content),
+                                  Text(
+                                    recentNote.content,
+                                    maxLines: 2,
+                                  ),
                                 ],
                               ),
                             ),
@@ -203,34 +210,51 @@ class NotesPage extends StatelessWidget {
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
                         final category = categories[index];
-                        return Container(
-                          margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 20.0),
-                          padding: const EdgeInsets.all(16.0),
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryGreen,
-                            borderRadius: BorderRadius.circular(25.0),
-                          ),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 20,
-                                backgroundColor: Colors.transparent,
-                                backgroundImage: NetworkImage(category.avatar),
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => NotesView(category: category),
                               ),
-                              const SizedBox(width: 16),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('${category.notesCount} Notes', style: const TextStyle(fontSize: 20)),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    category.name,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                                  ),
-                                ],
-                              ),
-                            ],
+                            );
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 20.0),
+                            padding: const EdgeInsets.all(16.0),
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Color(category.color),
+                              borderRadius: BorderRadius.circular(25.0),
+                            ),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 25,
+                                  backgroundColor: Colors.transparent,
+                                  backgroundImage: NetworkImage(category.avatar),
+                                ),
+                                const SizedBox(width: 16),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${category.notesCount} Notes',
+                                      style: const TextStyle(fontSize: 20),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      category.name,
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       },
@@ -241,49 +265,21 @@ class NotesPage extends StatelessWidget {
               ),
             ],
           ),
-
-          // Floating Action Button
           floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
-          // floatingActionButton: FloatingActionButton(
-          //   onPressed: () {
 
-          //   },
-          //   backgroundColor: AppColors.primaryOrange,
-          //   child: const Icon(Icons.add),
-          // ),
           floatingActionButton: FloatingActionButton(
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                builder: (context) => Container(
-                  height: 200,
-                  color: AppColors.primaryGrey,
-                  child: Column(
-                    children: [
-                      for (var item in [
-                        {'icon': Icons.star, 'category': 'Achievement'},
-                        {'icon': Icons.space_bar, 'category': 'You Space'},
-                        {'icon': Icons.self_improvement, 'category': 'Self Development'}
-                      ])
-                        ListTile(
-                          leading: Icon(item['icon'] as IconData),
-                          title: Text((item['title'] ?? '') as String),
-                          onTap: () {
-                            Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AdvancedRichTextEditor(
-                                  category: item['category'] as String,
-                                ),
-                              ),
-                            );
-                          },
-                        )
-                    ],
+            onPressed: () async {
+              final existCategories = await CacheService().getCategories();
+              if (context.mounted) {
+                showModalBottomSheet(
+                  context: context,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
                   ),
-                ),
-              );
+                  backgroundColor: Colors.white,
+                  builder: (context) => CategorySelectionSheet(categories: existCategories),
+                );
+              }
             },
             backgroundColor: AppColors.primaryOrange,
             child: const Icon(Icons.add),
