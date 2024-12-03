@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:inotes/core/models/category.dart';
 import 'package:inotes/core/models/note.dart';
 import 'package:inotes/core/models/response.dart';
@@ -6,6 +7,7 @@ import 'package:inotes/core/service/local/cache_service.dart';
 import 'package:inotes/core/service/log_service.dart';
 import 'package:inotes/core/service/remote/note.dart';
 import 'package:inotes/core/types.dart';
+import 'package:inotes/main.dart';
 
 part 'note_event.dart';
 part 'note_state.dart';
@@ -215,7 +217,7 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
           event: NoteEvents.deleteNoteSuccess,
         ));
 
-        _removeFromRecentNotes(event.payload['note_id']);
+        _removeFromRecentNotes(event.payload['note_id'], event.payload['user_id']);
         _removeFromNotesByCategory(event.payload['category'], event.payload['note_id']);
         _decrementCategoryNotesCount(event.payload['category']);
       }
@@ -234,11 +236,17 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
     }
   }
 
-  void _removeFromRecentNotes(int noteId) {
+  void _removeFromRecentNotes(int noteId, int userId) {
     final recentNotes = state.recentNotes?.data;
     final recentNoteIndex = recentNotes?.indexWhere((note) => note.id == noteId);
     if (recentNoteIndex != null && recentNoteIndex != -1) {
       recentNotes!.removeAt(recentNoteIndex);
+    }
+
+    if (recentNotes!.length < 3) {
+      final payload = {'user_id': userId, 'is_force_refresh': true};
+      final event = NoteEvent.fetchRecentNotesStart(payload: payload);
+      navigatorKey.currentContext!.read<NoteBloc>().add(event);
     }
   }
 
@@ -266,7 +274,7 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
 
     try {
       final Note? note = await _service.updateNote(
-        noteId: event.payload['note_id'],
+        noteId: event.payload['id'],
         userId: event.payload['user_id'],
         title: event.payload['title'],
         content: event.payload['content'],
