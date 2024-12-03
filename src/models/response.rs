@@ -29,6 +29,7 @@ pub struct QueryParams {
 #[derive(Deserialize, Debug, Clone)]
 pub struct PathParams {
     pub note_id: Option<u64>,
+    pub query: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
