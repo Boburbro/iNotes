@@ -1,5 +1,5 @@
 use actix_multipart::Multipart;
-use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
+use actix_web::{delete, get, post, web, HttpRequest, HttpResponse, Responder};
 use log::error;
 use serde_json::json;
 
@@ -72,13 +72,11 @@ async fn update_profile_picture(
             .next()
             .map(|(_, value)| value.clone());
 
-        let missing_fields: Vec<&str> = [
-            ("user_id", user_id.is_none()),
-            ("avatar", avatar.is_none()),
-        ]
-        .iter()
-        .filter_map(|(field, is_missing)| if *is_missing { Some(*field) } else { None })
-        .collect();
+        let missing_fields: Vec<&str> =
+            [("user_id", user_id.is_none()), ("avatar", avatar.is_none())]
+                .iter()
+                .filter_map(|(field, is_missing)| if *is_missing { Some(*field) } else { None })
+                .collect();
 
         if !missing_fields.is_empty() {
             return HttpResponse::BadRequest()
@@ -99,5 +97,35 @@ async fn update_profile_picture(
         }
     } else {
         return HttpResponse::BadRequest().body("Invalid multipart data");
+    }
+}
+
+#[delete("/delete-account")]
+async fn delete_account(
+    req: HttpRequest,
+    data: web::Data<AppState>,
+    query: web::Query<QueryParams>,
+) -> impl Responder {
+    let params = RequestContextParams {
+        query_params: Some(query.into_inner()),
+        ..Default::default()
+    };
+
+    let context = match RequestContext::new(req, &data, params) {
+        Ok(ctx) => ctx,
+        Err(err) => return err,
+    };
+
+    let query_params = context.params.query_params.unwrap();
+    let user_id = query_params.user_id.unwrap();
+
+    match db::delete_account(&context.conn, user_id) {
+        Ok(_) => HttpResponse::Ok().finish(),
+        Err(e) => {
+            error!("Failed to delete user account: {}", e);
+            HttpResponse::InternalServerError().json(json!({
+                "message": e.to_string()
+            }))
+        }
     }
 }
