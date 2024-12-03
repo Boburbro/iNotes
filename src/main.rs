@@ -37,9 +37,11 @@ async fn main() -> std::io::Result<()> {
             .service(api::fetch_recent_notes)
             .service(api::delete_note)
             .service(api::update_note)
+            .service(api::search_for_note)
             .service(api::fetch_notes_by_category)
             .service(api::add_category)
             .service(api::fetch_categories)
+            .service(api::delete_account)
             .service(Files::new("/uploads", "./uploads").show_files_listing())
     })
     .bind("127.0.0.1:8080")?
