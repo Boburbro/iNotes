@@ -7,14 +7,14 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
 import 'package:inotes/core/models/category.dart';
 import 'package:inotes/core/models/note.dart';
-import 'package:inotes/core/provider/note_bloc/note_bloc.dart';
+import 'package:inotes/core/provider/note/note_bloc.dart';
 import 'package:inotes/core/service/local/cache_service.dart';
 import 'package:inotes/view/utilities/colors.dart';
 
 class AdvancedRichTextEditor extends StatefulWidget {
-  const AdvancedRichTextEditor({super.key, this.existingNote, required this.category});
+  const AdvancedRichTextEditor({super.key, this.existingNote, this.category});
   final Note? existingNote;
-  final Category category;
+  final Category? category;
 
   @override
   State<AdvancedRichTextEditor> createState() => _AdvancedRichTextEditorState();
@@ -71,9 +71,9 @@ class _AdvancedRichTextEditorState extends State<AdvancedRichTextEditor> {
     // Yeni not oluştur
     final note = NewNote(
       userId: user!.id,
-      categoryId: widget.category.id,
+      categoryId: widget.category!.id,
       title: _titleController.text.trim(),
-      category: widget.category.name,
+      category: widget.category!.name,
       updatedAt: null,
       content: _controller.document.toPlainText(),
       delta: deltaJson,
@@ -96,9 +96,9 @@ class _AdvancedRichTextEditorState extends State<AdvancedRichTextEditor> {
     final updatedNote = Note(
       id: widget.existingNote!.id,
       userId: user!.id,
-      categoryId: widget.category.id,
+      categoryId: widget.existingNote!.categoryId,
       title: _titleController.text.trim(),
-      category: widget.category.name,
+      category: widget.existingNote!.category,
       updatedAt: DateTime.now(),
       content: _controller.document.toPlainText(),
       delta: deltaJson,
