@@ -9,14 +9,14 @@ enum UserEvents {
 }
 
 class UserEvent {
-  UserEvents? event;
-  dynamic type;
+  UserEvents? type;
+  dynamic payload;
 
-  UserEvent.getUserStart({this.type}) {
-    event = UserEvents.getUserStart;
+  UserEvent.getUserStart({this.payload}) {
+    type = UserEvents.getUserStart;
   }
 
-  UserEvent.updateProfileStart({this.type}) {
-    event = UserEvents.updateProfileStart;
+  UserEvent.updateProfileStart({this.payload}) {
+    type = UserEvents.updateProfileStart;
   }
 }

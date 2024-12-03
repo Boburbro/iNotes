@@ -8,9 +8,9 @@ import 'package:inotes/core/service/remote/user.dart';
 class UserBloc extends Bloc<UserEvent, UserState> {
   UserBloc() : super(UserState.initial()) {
     on<UserEvent>((event, emit) async {
-      switch (event.event) {
+      switch (event.type) {
         case UserEvents.getUserStart:
-          await _onGetUserStart(emit, event);
+          await _onGetUserStart(event, emit);
           break;
         case UserEvents.updateProfileStart:
           await _onUpdateProfileStart(event, emit);
@@ -21,11 +21,11 @@ class UserBloc extends Bloc<UserEvent, UserState> {
     });
   }
 
-  Future<void> _onGetUserStart(Emitter<UserState> emit, UserEvent event) async {
+  Future<void> _onGetUserStart(UserEvent event, Emitter<UserState> emit) async {
     emit(state.copyWith(event: UserEvents.getUserStart));
 
     try {
-      await _userService.getUser(userId: event.type).then((user) async {
+      await _userService.getUser(userId: event.payload).then((user) async {
         if (user == null) {
           emit(state.copyWith(event: UserEvents.getUserFailure));
           return;
@@ -52,7 +52,7 @@ class UserBloc extends Bloc<UserEvent, UserState> {
     emit(state.copyWith(event: UserEvents.updateProfileStart));
 
     try {
-      await _userService.updateProfilePicture(userJson: event.type).then((user) async {
+      await _userService.updateProfilePicture(userJson: event.payload).then((user) async {
         if (user == null) {
           emit(state.copyWith(event: UserEvents.updateProfileFailure));
           return;
