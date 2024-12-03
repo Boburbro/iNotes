@@ -6,8 +6,8 @@ use serde_json::json;
 use crate::{
     db,
     models::{
-        ApiResponse, JsonParams, NewNote, QueryParams, RequestContext, RequestContextParams,
-        ResponseBuilder,
+        ApiResponse, JsonParams, NewNote, PathParams, QueryParams, RequestContext,
+        RequestContextParams, ResponseBuilder,
     },
     state::AppState,
 };
@@ -292,6 +292,43 @@ async fn update_note(
         Ok(note) => HttpResponse::Ok().json(note),
         Err(e) => {
             error!("Failed to update note in database: {}", e);
+            HttpResponse::InternalServerError().json(json!({
+                "message": e.to_string()
+            }))
+        }
+    }
+}
+
+#[post("/notes/{query}")]
+async fn search_for_note(
+    req: HttpRequest,
+    data: web::Data<AppState>,
+    path: web::Path<PathParams>,
+) -> impl Responder {
+    let params = RequestContextParams {
+        path_params: Some(path.into_inner()),
+        ..Default::default()
+    };
+
+    let context = match RequestContext::new(req, &data, params) {
+        Ok(ctx) => ctx,
+        Err(err) => return err,
+    };
+
+    let pagination = context.pagination();
+
+    let path = context.params.path_params.unwrap();
+    let query_string = path.query.unwrap();
+    let query = query_string.as_str();
+
+    match db::search_for_note_in_db(&context.conn, query) {
+        Ok(notes) => {
+            let total = notes.len() as u32;
+            let response = ApiResponse::build(notes, total, &pagination);
+            HttpResponse::Ok().json(response)
+        }
+        Err(e) => {
+            error!("Failed to search for note in database: {}", e);
             HttpResponse::InternalServerError().json(json!({
                 "message": e.to_string()
             }))
