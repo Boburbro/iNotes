@@ -52,6 +52,20 @@ final class AuthenticationService {
       throw 'Failed to register';
     }
   }
+
+  Future<bool?> deleteAccount({required int userId}) async {
+    final queryParameters = {'user_id': userId};
+
+    try {
+      final response = await _dio.delete('/delete-account', queryParameters: queryParameters);
+      return response.statusCode == 200;
+    } on DioException catch (exception) {
+      final error = jsonDecode(exception.response?.data);
+      throw error['message'];
+    } catch (e) {
+      throw 'Failed to delete account';
+    }
+  }
 }
 
 class FailureResponse {
