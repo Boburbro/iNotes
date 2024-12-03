@@ -4,7 +4,7 @@ use crate::{
 };
 use r2d2::PooledConnection;
 use r2d2_sqlite::SqliteConnectionManager;
-use rusqlite::{self, params};
+use rusqlite::{self, params, Error};
 
 pub fn get_me(
     conn: &PooledConnection<SqliteConnectionManager>,
@@ -48,4 +48,20 @@ pub fn update_profile_picture(
     )?;
 
     Ok(updated_user)
+}
+
+pub fn delete_account(
+    conn: &PooledConnection<SqliteConnectionManager>,
+    user_id: u32,
+) -> Result<(), Error> {
+    let mut stmt = conn.prepare("SELECT COUNT(*) FROM users WHERE id = ?1")?;
+    let count: i64 = stmt.query_row(params![user_id], |row| row.get(0))?;
+
+    if count == 0 {
+        return Err(rusqlite::Error::QueryReturnedNoRows);
+    }
+
+    conn.execute("DELETE FROM users WHERE id = ?1", params![user_id])?;
+
+    Ok(())
 }
