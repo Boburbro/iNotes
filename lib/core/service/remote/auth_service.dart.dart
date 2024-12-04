@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:inotes/core/models/auth_form.dart';
 import 'package:inotes/core/models/user.dart';
-import 'package:inotes/core/service/api_client.dart';
+import 'package:inotes/core/utils/api_client.dart';
 import 'package:inotes/core/types.dart';
 
 final class AuthenticationService {
