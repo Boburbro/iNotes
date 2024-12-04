@@ -73,3 +73,13 @@ pub fn fetch_categories_from_db(
 
     Ok(categories)
 }
+
+pub fn delete_category_from_db(
+    conn: &PooledConnection<SqliteConnectionManager>,
+    user_id: u32,
+    category_id: u32,
+) -> Result<(), Error> {
+    let sql = "DELETE FROM categories WHERE id = ?1 AND user_id = ?2";
+    conn.execute(sql, params![category_id, user_id])?;
+    Ok(())
+}
