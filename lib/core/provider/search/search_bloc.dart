@@ -1,13 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:inotes/core/provider/search/search_event.dart';
 import 'package:inotes/core/provider/search/search_state.dart';
-import 'package:inotes/core/service/log_service.dart';
-import 'package:inotes/core/service/remote/note.dart';
+import 'package:inotes/core/utils/log_service.dart';
+import 'package:inotes/core/service/remote/note_service.dart';
 
 class SearchBloc extends Bloc<SearchEvent, SearchState> {
-  SearchBloc()
-      : _noteService = NoteService.instance,
-        super(SearchState.initial()) {
+  SearchBloc() : super(SearchState.initial()) {
     on<SearchEvent>((event, emit) async {
       switch (event.type) {
         case SearchEvents.fetchSearchResults:
@@ -42,5 +40,5 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     }
   }
 
-  late final NoteService _noteService;
+  final _noteService = NoteService.instance;
 }
