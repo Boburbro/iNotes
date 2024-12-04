@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:inotes/core/models/user.dart';
-import 'package:inotes/core/service/api_client.dart';
-import 'package:inotes/core/service/dio_helper.dart';
-import 'package:inotes/core/service/log_service.dart';
+import 'package:inotes/core/utils/api_client.dart';
+import 'package:inotes/core/utils/dio_helper.dart';
+import 'package:inotes/core/utils/log_service.dart';
 
 class UserService {
   static UserService? _instance;
