@@ -2,8 +2,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:inotes/core/models/auth_form.dart';
 import 'package:inotes/core/models/user.dart';
 import 'package:inotes/core/service/local/cache_service.dart';
-import 'package:inotes/core/service/log_service.dart';
-import 'package:inotes/core/service/remote/auth.dart';
+import 'package:inotes/core/utils/log_service.dart';
+import 'package:inotes/core/service/remote/auth_service.dart.dart';
 
 part 'auth_state.dart';
 part 'auth_event.dart';
@@ -68,6 +68,7 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
           event: AuthenticationEvents.loginSuccess,
           authResponse: loginResponse,
         ));
+        emit(state.copyWith(event: AuthenticationEvents.unauthenticated));
       }
     } catch (error, stackTrace) {
       CSLog.instance.error(
@@ -101,6 +102,7 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
           event: AuthenticationEvents.registerSuccess,
           authResponse: registerResponse,
         ));
+        emit(state.copyWith(event: AuthenticationEvents.unauthenticated));
       } else {
         emit(state.copyWith(
           event: AuthenticationEvents.registerFailure,
