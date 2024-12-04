@@ -1,11 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:note_app/core/config/theme.dart';
-import 'package:note_app/core/provider/theme/theme_state.dart';
-import 'package:note_app/core/service/cache_service.dart';
+import 'package:inotes/core/config/theme.dart';
+import 'package:inotes/core/provider/theme/theme_state.dart';
+import 'package:inotes/core/service/local/cache_service.dart';
 
 class ThemeCubit extends Cubit<ThemeState> {
   ThemeCubit()
-      : _cacheService = CacheServiceImpl(),
+      : _cacheService = CacheService(),
         super(ThemeState.initial());
 
   final themes = {
@@ -25,5 +25,5 @@ class ThemeCubit extends Cubit<ThemeState> {
     emit(state.copyWith(theme: themes[theme]));
   }
 
-  late final CacheServiceImpl _cacheService;
+  late final CacheService _cacheService;
 }
