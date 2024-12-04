@@ -1,5 +1,5 @@
 use actix_multipart::Multipart;
-use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
+use actix_web::{delete, get, post, web, HttpRequest, HttpResponse, Responder};
 use log::error;
 use serde_json::json;
 
@@ -122,5 +122,37 @@ async fn add_category(
         }
     } else {
         return HttpResponse::BadRequest().body("Invalid multipart data");
+    }
+}
+
+#[delete("/category/delete")]
+async fn delete_category(
+    req: HttpRequest,
+    query: web::Query<QueryParams>,
+    data: web::Data<AppState>,
+) -> impl Responder {
+    let params = RequestContextParams {
+        query_params: Some(query.into_inner()),
+        ..Default::default()
+    };
+
+    let context = match RequestContext::new(req, &data, params) {
+        Ok(ctx) => ctx,
+        Err(err) => return err,
+    };
+
+    let query_params = context.params.query_params.unwrap();
+
+    let category_id = query_params.category_id.unwrap();
+    let user_id = query_params.user_id.unwrap();
+
+    match db::delete_category_from_db(&context.conn, user_id, category_id) {
+        Ok(_) => HttpResponse::Ok().json(json!({"message": "Category deleted"})),
+        Err(e) => {
+            error!("Failed to delete category from database: {}", e);
+            HttpResponse::InternalServerError().json(json!({
+                "message": "Internal Server Error"
+            }))
+        }
     }
 }
