@@ -4,7 +4,7 @@ import 'package:inotes/core/models/category.dart';
 import 'package:inotes/core/models/note.dart';
 import 'package:inotes/core/models/response.dart';
 import 'package:inotes/core/utils/note_helper.dart';
-import 'package:inotes/core/utils/log_service.dart';
+import 'package:inotes/core/service/log_service.dart';
 import 'package:inotes/core/service/remote/note_service.dart';
 import 'package:inotes/core/types.dart';
 
@@ -73,7 +73,7 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
 
       emit(state.copyWith(event: NoteEvents.addNoteSuccess));
     } catch (error, stackTrace) {
-      CSLog.instance.error(
+      AppLog.instance.error(
         'Failed to add note',
         error: error,
         stackTrace: stackTrace,
@@ -106,7 +106,7 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
         event: NoteEvents.fetchRecentNotesSuccess,
       ));
     } catch (error, stackTrace) {
-      CSLog.instance.error(
+      AppLog.instance.error(
         'Failed to fetch recent notes',
         error: error,
         stackTrace: stackTrace,
@@ -145,7 +145,7 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
         event: NoteEvents.fetchNotesByCategorySuccess,
       ));
     } catch (error, stackTrace) {
-      CSLog.instance.error(
+      AppLog.instance.error(
         'Failed to fetch recent notes',
         error: error,
         stackTrace: stackTrace,
@@ -202,7 +202,7 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
 
       emit(state);
     } catch (error, stackTrace) {
-      CSLog.instance.error(
+      AppLog.instance.error(
         'Failed to delete note',
         error: error,
         stackTrace: stackTrace,
@@ -254,7 +254,7 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
 
       emit(state);
     } catch (error, stackTrace) {
-      CSLog.instance.error(
+      AppLog.instance.error(
         'Failed to update note',
         error: error,
         stackTrace: stackTrace,

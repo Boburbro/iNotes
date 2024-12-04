@@ -9,10 +9,10 @@ enum LogLevel {
   critical,
 }
 
-class CSLog {
-  CSLog._private();
+class AppLog {
+  AppLog._private();
 
-  static final CSLog instance = CSLog._private();
+  static final AppLog instance = AppLog._private();
 
   // Helper function to get current timestamp
   String _getTimestamp() {

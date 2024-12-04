@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:inotes/core/provider/search/search_event.dart';
 import 'package:inotes/core/provider/search/search_state.dart';
-import 'package:inotes/core/utils/log_service.dart';
+import 'package:inotes/core/service/log_service.dart';
 import 'package:inotes/core/service/remote/note_service.dart';
 
 class SearchBloc extends Bloc<SearchEvent, SearchState> {
@@ -28,7 +28,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
 
       emit(state.copyWith(notes: notes, event: SearchEvents.successSearchResult));
     } catch (error, stackTrace) {
-      CSLog.instance.error(
+      AppLog.instance.error(
         'Failed to fetch search results',
         error: error,
         stackTrace: stackTrace,

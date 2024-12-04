@@ -3,7 +3,7 @@ import 'package:inotes/core/models/note.dart';
 import 'package:inotes/core/models/response.dart';
 import 'package:inotes/core/utils/api_client.dart';
 import 'package:inotes/core/utils/dio_helper.dart';
-import 'package:inotes/core/utils/log_service.dart';
+import 'package:inotes/core/service/log_service.dart';
 import 'package:inotes/view/utilities/utils.dart';
 
 class NoteService {
@@ -32,7 +32,7 @@ class NoteService {
       throw 'Failed to add note';
     } on DioException catch (exception) {
       final message = DioErrorHelper.handle(exception);
-      CSLog.instance.debug('Add Note Error Message: $message');
+      AppLog.instance.debug('Add Note Error Message: $message');
       throw DioErrorHelper.handle(exception);
     } catch (e) {
       throw 'Failed to add note';
@@ -51,7 +51,7 @@ class NoteService {
     } on DioException catch (exception) {
       throw DioErrorHelper.handle(exception);
     } catch (e) {
-      CSLog.instance.debug('Fetch Notes Error Message: $e');
+      AppLog.instance.debug('Fetch Notes Error Message: $e');
       throw 'Failed to load notes';
     }
   }
@@ -68,7 +68,7 @@ class NoteService {
     } on DioException catch (exception) {
       throw DioErrorHelper.handle(exception);
     } catch (e) {
-      CSLog.instance.debug('Fetch Notes Error Message: $e');
+      AppLog.instance.debug('Fetch Notes Error Message: $e');
       throw 'Failed to load notes';
     }
   }
@@ -85,7 +85,7 @@ class NoteService {
     } on DioException catch (exception) {
       throw DioErrorHelper.handle(exception);
     } catch (e) {
-      CSLog.instance.debug('Fetch Recent Notes Error Message: $e');
+      AppLog.instance.debug('Fetch Recent Notes Error Message: $e');
       throw 'Failed to load recent notes';
     }
   }
@@ -102,7 +102,7 @@ class NoteService {
     } on DioException catch (exception) {
       throw DioErrorHelper.handle(exception);
     } catch (e) {
-      CSLog.instance.debug('Fetch Recent Notes Error Message: $e');
+      AppLog.instance.debug('Fetch Recent Notes Error Message: $e');
       throw 'Failed to load recent notes';
     }
   }
@@ -130,7 +130,7 @@ class NoteService {
     } on DioException catch (exception) {
       throw DioErrorHelper.handle(exception);
     } catch (e) {
-      CSLog.instance.debug('Update Note Error Message: $e');
+      AppLog.instance.debug('Update Note Error Message: $e');
       throw 'Failed to update note';
     }
   }
@@ -146,7 +146,7 @@ class NoteService {
     } on DioException catch (exception) {
       throw DioErrorHelper.handle(exception);
     } catch (e) {
-      CSLog.instance.debug('Fetch Notes Error Message: $e');
+      AppLog.instance.debug('Fetch Notes Error Message: $e');
       throw 'Failed to load notes';
     }
   }

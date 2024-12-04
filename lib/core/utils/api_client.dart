@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:inotes/core/utils/log_service.dart';
+import 'package:inotes/core/service/log_service.dart';
 
 class ApiClient {
   static ApiClient? _instance;
@@ -17,19 +17,19 @@ class ApiClient {
     );
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
-        CSLog.instance.debug('Request: ${options.method} ${options.path}');
+        AppLog.instance.debug('Request: ${options.method} ${options.path}');
         return handler.next(options);
       },
       onError: (DioException exception, handler) async {
         if (exception.response?.data == null) {
-          CSLog.instance.debug('Exception response data is null');
+          AppLog.instance.debug('Exception response data is null');
           return;
         }
         if (exception.response?.data.isEmpty) {
-          CSLog.instance.debug('Exception response data is empty');
+          AppLog.instance.debug('Exception response data is empty');
           return;
         }
-        CSLog.instance.debug('Exception response data: ${exception.response?.data}');
+        AppLog.instance.debug('Exception response data: ${exception.response?.data}');
 
         return handler.next(exception);
       },

@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:inotes/core/models/user.dart';
 import 'package:inotes/core/utils/api_client.dart';
 import 'package:inotes/core/utils/dio_helper.dart';
-import 'package:inotes/core/utils/log_service.dart';
+import 'package:inotes/core/service/log_service.dart';
 
 class UserService {
   static UserService? _instance;
@@ -22,7 +22,7 @@ class UserService {
       throw 'Failed to get user';
     } on DioException catch (exception) {
       final message = DioErrorHelper.handle(exception);
-      CSLog.instance.debug('Get User Error Message: $message');
+      AppLog.instance.debug('Get User Error Message: $message');
       throw DioErrorHelper.handle(exception);
     } catch (e) {
       throw 'Failed to get user';
@@ -47,7 +47,7 @@ class UserService {
       throw 'Failed to update profile picture';
     } on DioException catch (exception) {
       final message = DioErrorHelper.handle(exception);
-      CSLog.instance.debug('Update Profile Picture Error Message: $message');
+      AppLog.instance.debug('Update Profile Picture Error Message: $message');
       throw DioErrorHelper.handle(exception);
     } catch (e) {
       throw 'Failed to update profile picture';

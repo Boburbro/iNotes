@@ -2,7 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:inotes/core/models/category.dart';
 import 'package:inotes/core/models/response.dart';
 import 'package:inotes/core/service/local/cache_service.dart';
-import 'package:inotes/core/utils/log_service.dart';
+import 'package:inotes/core/service/log_service.dart';
 import 'package:inotes/core/service/remote/category_service.dart';
 
 part 'category_event.dart';
@@ -40,7 +40,7 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
 
       emit(state);
     } catch (error, stackTrace) {
-      CSLog.instance.error(
+      AppLog.instance.error(
         'Failed to add note',
         error: error,
         stackTrace: stackTrace,
@@ -73,7 +73,7 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
         event: CategoryEvents.fetchCategoriesSuccess,
       ));
     } catch (error, stackTrace) {
-      CSLog.instance.error(
+      AppLog.instance.error(
         'Failed to fetch categories',
         error: error,
         stackTrace: stackTrace,

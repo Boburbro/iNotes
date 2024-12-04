@@ -2,7 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:inotes/core/provider/user/user_event.dart';
 import 'package:inotes/core/provider/user/user_state.dart';
 import 'package:inotes/core/service/local/cache_service.dart';
-import 'package:inotes/core/utils/log_service.dart';
+import 'package:inotes/core/service/log_service.dart';
 import 'package:inotes/core/service/remote/user_service.dart';
 
 class UserBloc extends Bloc<UserEvent, UserState> {
@@ -36,7 +36,7 @@ class UserBloc extends Bloc<UserEvent, UserState> {
       final user = await _secureStorageCacheService.getUser();
       emit(state.copyWith(event: UserEvents.getUserSuccess, user: user));
     } catch (error, stackTrace) {
-      CSLog.instance.error(
+      AppLog.instance.error(
         'Failed to get user',
         error: error,
         stackTrace: stackTrace,
@@ -63,7 +63,7 @@ class UserBloc extends Bloc<UserEvent, UserState> {
       final user = await _secureStorageCacheService.getUser();
       emit(state.copyWith(event: UserEvents.getUserSuccess, user: user));
     } catch (error, stackTrace) {
-      CSLog.instance.error(
+      AppLog.instance.error(
         'Failed to edit user',
         error: error,
         stackTrace: stackTrace,

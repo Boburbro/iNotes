@@ -3,7 +3,7 @@ import 'package:inotes/core/models/category.dart';
 import 'package:inotes/core/models/response.dart';
 import 'package:inotes/core/utils/api_client.dart';
 import 'package:inotes/core/utils/dio_helper.dart';
-import 'package:inotes/core/utils/log_service.dart';
+import 'package:inotes/core/service/log_service.dart';
 import 'package:inotes/core/types.dart';
 import 'package:inotes/view/utilities/utils.dart';
 
@@ -26,7 +26,7 @@ final class CategoryService {
     } on DioException catch (exception) {
       throw DioErrorHelper.handle(exception);
     } catch (e) {
-      CSLog.instance.debug('Fetch Categories Error Message: $e');
+      AppLog.instance.debug('Fetch Categories Error Message: $e');
       throw 'Failed to load categories';
     }
   }
@@ -51,7 +51,7 @@ final class CategoryService {
     } on DioException catch (exception) {
       throw DioErrorHelper.handle(exception);
     } catch (e) {
-      CSLog.instance.debug('Add Category Error Message: $e');
+      AppLog.instance.debug('Add Category Error Message: $e');
       throw 'Failed to add category';
     }
   }
