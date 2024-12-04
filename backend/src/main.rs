@@ -42,6 +42,7 @@ async fn main() -> std::io::Result<()> {
             .service(api::add_category)
             .service(api::fetch_categories)
             .service(api::delete_account)
+            .service(api::delete_category)
             .service(Files::new("/uploads", "./uploads").show_files_listing())
     })
     .bind("127.0.0.1:8080")?
