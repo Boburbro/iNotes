@@ -103,7 +103,7 @@ async fn add_note(
             Err(e) => {
                 error!("Failed to add note to database: {}", e);
                 HttpResponse::InternalServerError().json(json!({
-                    "message": "Internal Server Error"
+                    "message": e.to_string()
                 }))
             }
         }
