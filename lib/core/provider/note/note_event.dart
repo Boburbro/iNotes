@@ -5,10 +5,6 @@ enum NoteEvents {
   addNoteSuccess,
   addNoteFailure,
 
-  fetchNotesStart,
-  fetchNotesSuccess,
-  fetchNotesFailure,
-
   fetchNotesByCategoryStart,
   fetchNotesByCategorySuccess,
   fetchNotesByCategoryFailure,
@@ -24,14 +20,6 @@ enum NoteEvents {
   updateNoteStart,
   updateNoteSuccess,
   updateNoteFailure,
-
-  fetchCategoriesStart,
-  fetchCategoriesSuccess,
-  fetchCategoriesFailure,
-
-  addCategoryStart,
-  addCategorySuccess,
-  addCategoryFailure,
 }
 
 class NoteEvent {
@@ -42,10 +30,6 @@ class NoteEvent {
     event = NoteEvents.addNoteStart;
     payload = noteJson;
   }
-
-  // NoteEvent.fetchNotesStart({this.payload}) {
-  //   event = NoteEvents.fetchNotesStart;
-  // }
 
   NoteEvent.fetchNotesByCategoryStart({required this.payload}) {
     // payload - categoryId, userId, categoryName
@@ -62,14 +46,5 @@ class NoteEvent {
 
   NoteEvent.updateNoteStart({required this.payload}) {
     event = NoteEvents.updateNoteStart;
-  }
-
-  NoteEvent.fetchCategoriesStart({this.payload}) {
-    event = NoteEvents.fetchCategoriesStart;
-  }
-
-  NoteEvent.addCategoryStart({required Json categoryJson}) {
-    event = NoteEvents.addCategoryStart;
-    payload = categoryJson;
   }
 }

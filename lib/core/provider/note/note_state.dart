@@ -1,7 +1,6 @@
 part of 'note_bloc.dart';
 
 class NoteState {
-  // final PaginatedDataResponse<Note>? notes;
   final PaginatedDataResponse<Note>? recentNotes;
   final PaginatedDataResponse<Category>? categories;
   final Map<String, PaginatedDataResponse<Note>?>? notesByCategory;
@@ -9,7 +8,6 @@ class NoteState {
   final String? errorMessage;
 
   NoteState({
-    // this.notes,
     this.recentNotes,
     this.notesByCategory,
     this.categories,
@@ -18,7 +16,6 @@ class NoteState {
   });
 
   NoteState copyWith({
-    // PaginatedDataResponse<Note>? notes,
     PaginatedDataResponse<Note>? recentNotes,
     PaginatedDataResponse<Category>? categories,
     Map<String, PaginatedDataResponse<Note>?>? notesByCategory,
@@ -26,7 +23,6 @@ class NoteState {
     String? errorMessage,
   }) {
     return NoteState(
-      // notes: notes ?? this.notes,
       recentNotes: recentNotes ?? this.recentNotes,
       categories: categories ?? this.categories,
       notesByCategory: notesByCategory ?? this.notesByCategory,
@@ -37,7 +33,6 @@ class NoteState {
 
   factory NoteState.initial() {
     return NoteState(
-      // notes: null,
       recentNotes: null,
       categories: null,
       event: null,

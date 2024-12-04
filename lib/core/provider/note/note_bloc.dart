@@ -3,19 +3,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:inotes/core/models/category.dart';
 import 'package:inotes/core/models/note.dart';
 import 'package:inotes/core/models/response.dart';
-import 'package:inotes/core/note_helper.dart';
-import 'package:inotes/core/service/local/cache_service.dart';
-import 'package:inotes/core/service/log_service.dart';
-import 'package:inotes/core/service/remote/note.dart';
+import 'package:inotes/core/utils/note_helper.dart';
+import 'package:inotes/core/utils/log_service.dart';
+import 'package:inotes/core/service/remote/note_service.dart';
 import 'package:inotes/core/types.dart';
 
 part 'note_event.dart';
 part 'note_state.dart';
 
 class NoteBloc extends Bloc<NoteEvent, NoteState> {
-  NoteBloc()
-      : _service = NoteService.instance,
-        super(NoteState.initial()) {
+  NoteBloc() : super(NoteState.initial()) {
     on<NoteEvent>((event, emit) async {
       switch (event.event) {
         case NoteEvents.addNoteStart:
@@ -32,12 +29,6 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
           break;
         case NoteEvents.updateNoteStart:
           await _onUpdateNoteStart(event, emit);
-          break;
-        case NoteEvents.fetchCategoriesStart:
-          await _onfetchCategoriesStart(event, emit);
-          break;
-        case NoteEvents.addCategoryStart:
-          await _onAddCategoryStart(event, emit);
           break;
 
         default:
@@ -275,68 +266,5 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
     }
   }
 
-  Future<void> _onfetchCategoriesStart(NoteEvent event, Emitter<NoteState> emit) async {
-    emit(state.copyWith(
-      event: NoteEvents.fetchCategoriesStart,
-    ));
-
-    final bool isForceRefresh = event.payload['is_force_refresh'];
-    final data = state.categories?.data;
-    final isExistData = data != null && data.isNotEmpty;
-
-    if (isExistData && !isForceRefresh) {
-      emit(state.copyWith(event: NoteEvents.fetchCategoriesSuccess));
-      return;
-    }
-
-    try {
-      final PaginatedDataResponse<Category>? categories = await _service.fetchCategories(userId: event.payload['user_id']);
-      emit(state.copyWith(
-        categories: categories,
-        event: NoteEvents.fetchCategoriesSuccess,
-      ));
-    } catch (error, stackTrace) {
-      CSLog.instance.error(
-        'Failed to fetch categories',
-        error: error,
-        stackTrace: stackTrace,
-      );
-
-      emit(state.copyWith(
-        errorMessage: error.toString(),
-        event: NoteEvents.fetchCategoriesFailure,
-      ));
-    }
-  }
-
-  Future<void> _onAddCategoryStart(NoteEvent event, Emitter<NoteState> emit) async {
-    emit(state.copyWith(
-      event: NoteEvents.addCategoryStart,
-    ));
-
-    try {
-      final Category? category = await _service.addCategory(categoryJson: event.payload);
-
-      if (category != null) {
-        state.categories!.data.add(category);
-        emit(state.copyWith(event: NoteEvents.addCategorySuccess));
-
-        await CacheService().setCategory(category.toJson());
-      }
-
-      emit(state);
-    } catch (error, stackTrace) {
-      CSLog.instance.error(
-        'Failed to add note',
-        error: error,
-        stackTrace: stackTrace,
-      );
-
-      emit(state.copyWith(
-        event: NoteEvents.addCategoryFailure,
-      ));
-    }
-  }
-
-  late final NoteService _service;
+  final _service = NoteService.instance;
 }
