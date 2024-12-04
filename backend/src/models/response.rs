@@ -1,18 +1,15 @@
 use std::collections::HashMap;
 
+use crate::state::AppState;
 use actix_multipart::Multipart;
 use actix_web::{
     web::{self},
     HttpRequest, HttpResponse,
 };
 use futures::TryStreamExt;
-use log::error;
 use r2d2::PooledConnection;
 use r2d2_sqlite::SqliteConnectionManager;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
-
-use crate::state::AppState;
 
 const BASE_URL: &str = "http://localhost:8080";
 
@@ -150,13 +147,7 @@ impl RequestContext {
         data: &web::Data<AppState>,
         params: RequestContextParams,
     ) -> Result<Self, HttpResponse> {
-        // Veritabanı bağlantısını al
-        let conn = data.pool.get().map_err(|e| {
-            error!("Failed to get connection from pool: {}", e);
-            HttpResponse::InternalServerError().json(json!({
-                "message": "Internal Server Error"
-            }))
-        })?;
+        let conn = data.get_conn_with_foreign_keys().unwrap();
 
         Ok(Self {
             req: req,
