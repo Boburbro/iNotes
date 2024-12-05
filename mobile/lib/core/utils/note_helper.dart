@@ -30,6 +30,13 @@ class ListHelper {
     }
   }
 
+  static void removeItems<T>(
+    List<T> items,
+    bool Function(T) matcher,
+  ) {
+    items.removeWhere(matcher);
+  }
+
   static void incrementCount<T>(
     List<T> items,
     bool Function(T) matcher,
