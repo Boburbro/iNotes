@@ -2,7 +2,7 @@
 
 ## 🔐 Authentication Endpoints
 
-### 1. User Registration
+### <span style="color:blue">1. User Registration</span>
 - **Endpoint**: `POST /auth/register`
 - **Postman Test Parameters**:
   ```json
