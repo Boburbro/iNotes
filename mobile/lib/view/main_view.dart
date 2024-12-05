@@ -118,7 +118,7 @@ class _MainViewState extends State<MainView> {
                       }
 
                       final recentNotes = state.recentNotes?.data;
-                      final categories = state.categories?.data;
+                      //final categories = state.categories?.data;
 
                       if (recentNotes == null) {
                         return const Center(child: CircularProgressIndicator());
@@ -134,26 +134,30 @@ class _MainViewState extends State<MainView> {
                           final recentNote = recentNotes[index];
                           return GestureDetector(
                             onTap: () {
-                              final category = categories!.firstWhere((category) {
-                                return category.name == recentNote.category;
-                              });
-
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => NoteEditorView(
-                                    category: category,
-                                    existingNote: recentNote,
-                                  ),
+                                  builder: (context) {
+                                    return NoteEditorView(existingNote: recentNote);
+                                  },
                                 ),
                               );
                             },
-                            onLongPress: () => ViewUtils.showAdvancedDeleteNoteBottomSheet(
-                              context,
-                              noteId: recentNote.id,
-                              categoryId: recentNote.categoryId,
-                              categoryName: recentNote.category,
-                              userId: recentNote.userId,
+                            onLongPress: () => ViewUtils.showDeleteConfirmationBottomSheet(
+                              context: context,
+                              title: "Delete Note?",
+                              description: "Are you sure you want to permanently delete this note? This action cannot be undone.",
+                              icon: Icons.warning_amber_rounded,
+                              iconColor: Colors.red,
+                              onDelete: () {
+                                final payload = {
+                                  'user_id': recentNote.userId,
+                                  'note_id': recentNote.id,
+                                  'category_id': recentNote.categoryId,
+                                  'category': recentNote.category,
+                                };
+                                context.read<NoteBloc>().add(NoteEvent.deleteNoteStart(payload: payload));
+                              },
                             ),
                             child: Container(
                               margin: const EdgeInsets.all(16.0),
@@ -247,6 +251,20 @@ class _MainViewState extends State<MainView> {
                               MaterialPageRoute(
                                 builder: (context) => NotesView(category: category),
                               ),
+                            );
+                          },
+                          onLongPress: () {
+                            ViewUtils.showDeleteConfirmationBottomSheet(
+                              context: context,
+                              title: "Delete Category?",
+                              description:
+                                  "Are you sure you want to permanently delete this category? All related notes will also be deleted.",
+                              icon: Icons.delete_forever,
+                              iconColor: Colors.orange,
+                              onDelete: () {
+                                final payload = {'category_id': category.id, 'user_id': category.userId};
+                                context.read<CategoryBloc>().add(CategoryEvent.deleteCategoryStart(payload: payload));
+                              },
                             );
                           },
                           child: Container(
