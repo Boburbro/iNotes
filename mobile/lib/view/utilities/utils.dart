@@ -1,18 +1,78 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/provider/note/note_bloc.dart';
 
 final class ViewUtils {
   static String colorToHex(int value) {
     return '0x${value.toRadixString(16).toUpperCase()}';
   }
 
-  static void showAdvancedDeleteNoteBottomSheet(
-    BuildContext context, {
-    required int userId,
-    required int noteId,
-    required int categoryId,
-    required String categoryName,
+  static OverlayEntry? _overlayEntry;
+
+  static void showTopSnackBar({
+    required BuildContext context,
+    required String message,
+    Color backgroundColor = Colors.black,
+    Duration duration = const Duration(seconds: 3),
+  }) {
+    // Remove any existing SnackBar
+    _removeCurrentSnackBar();
+
+    final overlay = Overlay.of(context);
+
+    // Create a new OverlayEntry
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: MediaQuery.of(context).padding.top + 16, // Top padding for status bar
+        left: 16,
+        right: 16,
+        child: Material(
+          color: Colors.transparent,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // Insert the OverlayEntry
+    overlay.insert(_overlayEntry!);
+
+    // Remove after duration
+    Future.delayed(duration, () {
+      _removeCurrentSnackBar();
+    });
+  }
+
+  static void _removeCurrentSnackBar() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  static void showDeleteConfirmationBottomSheet({
+    required BuildContext context,
+    required String title,
+    required String description,
+    required IconData icon,
+    required Color iconColor,
+    required void Function() onDelete,
   }) {
     showModalBottomSheet(
       context: context,
@@ -37,20 +97,20 @@ final class ViewUtils {
               Container(
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
+                  color: iconColor.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.warning_amber_rounded,
+                child: Icon(
+                  icon,
                   size: 48,
-                  color: Colors.red,
+                  color: iconColor,
                 ),
               ),
               const SizedBox(height: 16),
               // Title
-              const Text(
-                "Delete Note?",
-                style: TextStyle(
+              Text(
+                title,
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
@@ -58,11 +118,10 @@ final class ViewUtils {
               ),
               const SizedBox(height: 8),
               // Description
-              const Text(
-                "Are you sure you want to permanently delete this note? "
-                "This action cannot be undone.",
+              Text(
+                description,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   color: Colors.grey,
                 ),
@@ -81,14 +140,8 @@ final class ViewUtils {
                         ),
                       ),
                       onPressed: () {
-                        Navigator.pop(context);
-                        final payload = {
-                          'user_id': userId,
-                          'note_id': noteId,
-                          'category_id': categoryId,
-                          'category': categoryName,
-                        };
-                        context.read<NoteBloc>().add(NoteEvent.deleteNoteStart(payload: payload));
+                        Navigator.pop(context); // Close BottomSheet
+                        onDelete(); // Trigger delete action
                       },
                       child: const Text(
                         "Delete",
