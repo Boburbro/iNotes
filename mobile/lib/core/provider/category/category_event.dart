@@ -8,6 +8,13 @@ enum CategoryEvents {
   fetchCategoriesStart,
   fetchCategoriesSuccess,
   fetchCategoriesFailure,
+
+  deleteCategoryStart,
+  deleteCategorySuccess,
+  deleteCategoryFailure,
+
+  incrementNotesCountStart,
+  decrementNotesCountStart
 }
 
 class CategoryEvent {
@@ -20,5 +27,17 @@ class CategoryEvent {
 
   CategoryEvent.fetchCategoriesStart({this.payload}) {
     event = CategoryEvents.fetchCategoriesStart;
+  }
+
+  CategoryEvent.deleteCategoryStart({this.payload}) {
+    event = CategoryEvents.deleteCategoryStart;
+  }
+
+  CategoryEvent.incrementNotesCountStart({this.payload}) {
+    event = CategoryEvents.incrementNotesCountStart;
+  }
+
+  CategoryEvent.decrementNotesCountStart({this.payload}) {
+    event = CategoryEvents.decrementNotesCountStart;
   }
 }
