@@ -68,7 +68,7 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
           event: AuthenticationEvents.loginSuccess,
           authResponse: loginResponse,
         ));
-        emit(state.copyWith(event: AuthenticationEvents.unauthenticated));
+        emit(state.copyWith(event: AuthenticationEvents.authenticated));
       }
     } catch (error, stackTrace) {
       AppLog.instance.error(
@@ -102,7 +102,7 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
           event: AuthenticationEvents.registerSuccess,
           authResponse: registerResponse,
         ));
-        emit(state.copyWith(event: AuthenticationEvents.unauthenticated));
+        emit(state.copyWith(event: AuthenticationEvents.authenticated));
       } else {
         emit(state.copyWith(
           event: AuthenticationEvents.registerFailure,
