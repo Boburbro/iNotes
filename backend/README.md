@@ -2,9 +2,10 @@
 
 ## 🔐 Authentication Endpoints
 
-### <span style="color:blue">1. User Registration</span>
-- **Endpoint**: `POST /auth/register`
-- **Postman Test Parameters**:
+### $${\color{green} 🔐 1. User \space Registration}$$
+
+- **$${\color{orange} Endpoint}$$**: `POST /auth/register`
+- **$${\color{orange} Postman \space Test \space Parameters}$$**:
   ```json
   {
     "email": "user@example.com",
