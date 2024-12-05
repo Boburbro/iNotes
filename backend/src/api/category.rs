@@ -5,6 +5,7 @@ use serde_json::json;
 
 use crate::{
     db,
+    errors::DatabaseError,
     models::{
         ApiResponse, NewCategory, QueryParams, RequestContext, RequestContextParams,
         ResponseBuilder,
@@ -115,9 +116,14 @@ async fn add_category(
 
         match db::add_category_to_db(&context.conn, new_category) {
             Ok(product) => HttpResponse::Created().json(product),
+
+            Err(DatabaseError::CategoryExists) => HttpResponse::BadRequest().json(json!({
+                "message": "Categort already exists"
+            })),
+
             Err(err) => {
                 println!("Error adding category to database: {:?}", err);
-                HttpResponse::BadRequest().json(json!({"message": err.to_string()}))
+                HttpResponse::InternalServerError().json(json!({"message": err.to_string()}))
             }
         }
     } else {
@@ -147,11 +153,11 @@ async fn delete_category(
     let user_id = query_params.user_id.unwrap();
 
     match db::delete_category_from_db(&context.conn, user_id, category_id) {
-        Ok(_) => HttpResponse::Ok().json(json!({"message": "Category deleted"})),
+        Ok(_) => HttpResponse::NoContent().finish(),
         Err(e) => {
             error!("Failed to delete category from database: {}", e);
             HttpResponse::InternalServerError().json(json!({
-                "message": "Internal Server Error"
+                "message": e.to_string()
             }))
         }
     }
