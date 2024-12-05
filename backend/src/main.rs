@@ -33,7 +33,6 @@ async fn main() -> std::io::Result<()> {
             .service(api::get_user)
             .service(api::update_profile_picture)
             .service(api::add_note)
-            .service(api::fetch_notes)
             .service(api::fetch_recent_notes)
             .service(api::delete_note)
             .service(api::update_note)

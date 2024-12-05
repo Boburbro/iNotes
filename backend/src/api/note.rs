@@ -112,46 +112,6 @@ async fn add_note(
     }
 }
 
-#[get("/notes")]
-async fn fetch_notes(
-    req: HttpRequest,
-    data: web::Data<AppState>,
-    query: web::Query<QueryParams>,
-) -> impl Responder {
-    let params = RequestContextParams {
-        query_params: Some(query.into_inner()),
-        ..Default::default()
-    };
-
-    let context = match RequestContext::new(req, &data, params) {
-        Ok(ctx) => ctx,
-        Err(err) => return err,
-    };
-
-    let pagination = context.pagination();
-    let query_params = context.params.query_params.unwrap();
-    let user_id = query_params.user_id.unwrap();
-
-    match db::fetch_notes_from_db(
-        &context.conn,
-        pagination.per_page,
-        pagination.offset,
-        user_id,
-    ) {
-        Ok(notes) => {
-            let total = notes.len() as u32;
-            let response = ApiResponse::build(notes, total, &pagination);
-            HttpResponse::Ok().json(response)
-        }
-        Err(e) => {
-            error!("Failed to fetch notes from database: {}", e);
-            HttpResponse::InternalServerError().json(json!({
-                "message": e.to_string()
-            }))
-        }
-    }
-}
-
 #[get("/notes-by-category")]
 async fn fetch_notes_by_category(
     req: HttpRequest,

@@ -65,49 +65,6 @@ pub fn add_note_to_db(
     })
 }
 
-pub fn fetch_notes_from_db(
-    conn: &PooledConnection<SqliteConnectionManager>,
-    limit: u8,
-    offset: u16,
-    user_id: u32,
-) -> Result<Vec<Note>, Error> {
-    let sql = "
-    SELECT notes.id, notes.category_id, notes.user_id, 
-           notes.title, notes.content, 
-           notes.category, notes.delta, 
-           notes.created_at, notes.updated_at, notes.color
-    FROM notes
-    JOIN users ON notes.user_id = users.id
-    WHERE users.id = ?1
-    ORDER BY notes.created_at DESC
-    LIMIT ?2 OFFSET ?3";
-
-    let mut stmt = conn.prepare(sql).unwrap();
-
-    let note_iter = stmt.query_map([user_id, limit as u32, offset as u32], |row| {
-        Ok(Note {
-            id: row.get("id")?,
-            user_id: row.get("user_id")?,
-            category_id: row.get("category_id")?,
-            title: row.get("title")?,
-            content: row.get("content")?,
-            category: row.get("category")?,
-            delta: row.get("delta")?,
-            created_at: row.get("created_at")?,
-            updated_at: row.get("updated_at")?,
-            color: row.get("color")?,
-        })
-    })?;
-
-    let mut notes = Vec::new();
-
-    for note in note_iter {
-        notes.push(note.unwrap());
-    }
-
-    Ok(notes)
-}
-
 pub fn fetch_notes_by_category_from_db(
     conn: &PooledConnection<SqliteConnectionManager>,
     limit: u8,
