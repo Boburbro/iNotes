@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import '../../models/category.dart';
 import '../../models/response.dart';
@@ -53,6 +55,19 @@ final class CategoryService {
     } catch (e) {
       AppLog.instance.debug('Add Category Error Message: $e');
       throw 'Failed to add category';
+    }
+  }
+
+  Future<bool?> deleteCategory({required int userId, required int categoryId}) async {
+    final queryParameters = {'user_id': userId, 'category_id': categoryId};
+    try {
+      final response = await _dio.delete('/category/delete', queryParameters: queryParameters);
+      return response.statusCode == HttpStatus.noContent;
+    } on DioException catch (exception) {
+      throw DioErrorHelper.handle(exception);
+    } catch (e) {
+      AppLog.instance.debug('Fetch Categories Error Message: $e');
+      throw 'Failed to load categories';
     }
   }
 }
