@@ -18,9 +18,9 @@
   - Username requirements
   - Password complexity
 
-### 2. User Login
-- **Endpoint**: `POST /auth/login`
-- **Postman Test Parameters**:
+### $${\color{green} 2. User \space Login}$$
+- **$${\color{orange} Endpoint}$$**: `POST /auth/login`
+- **$${\color{orange} Postman \space Test \space Parameters}$$**:
   ```json
   {
     "username": "johndoe",
@@ -30,27 +30,27 @@
 
 ## 👤 User Management Endpoints
 
-### 3. Get User Profile
-- **Endpoint**: `GET /user`
-- **Postman Query Parameters**:
+### $${\color{green} 3. Get \space User \space Profile}$$
+- **$${\color{orange} Endpoint}$$**: `GET /user`
+- **$${\color{orange} Postman \space Query \space Parameters}$$**:
   - `user_id`: Integer (Required)
   
-### 4. Update Profile Picture
-- **Endpoint**: `POST /update-profile-picture`
-- **Postman Form-data Parameters**:
+### $${\color{green} 4. Update \space Profile \space Picture}$$
+- **$${\color{orange} Endpoint}$$**: `POST /update-profile-picture`
+- **$${\color{orange} Postman \space Form-data \space Parameters}$$**:
   - `user_id`: Integer
   - `avatar`: File upload
 
-### 5. Delete Account
-- **Endpoint**: `DELETE /delete-account`
-- **Postman Query Parameters**:
+### $${\color{green} 5. Delete \space Account}$$
+- **$${\color{orange} Endpoint}$$**: `DELETE /delete-account`
+- **$${\color{orange} Postman \space Query \space Parameters}$$**:
   - `user_id`: Integer (Required)
 
 ## 📓 Note Management Endpoints
 
-### 6. Create Note
-- **Endpoint**: `POST /note`
-- **Postman Form-data Parameters**:
+### $${\color{green} 6. Create \space Note}$$
+- **$${\color{orange} Endpoint}$$**: `POST /note`
+- **$${\color{orange} Postman \space Form-data \space Parameters}$$**:
   ```
   user_id: 1
   category_id: 2
@@ -61,21 +61,21 @@
   color: 0xFF0000 (Hex color)
   ```
 
-### 7. Fetch Notes
-- **Endpoint**: `GET /notes`
-- **Postman Query Parameters**:
+### $${\color{green} 7. Fetch \space Notes}$$
+- **$${\color{orange} Endpoint}$$**: `GET /notes`
+- **$${\color{orange} Postman \space Query \space Parameters}$$**:
   - `user_id`: Integer
   - `page`: Integer (Optional, default: 1)
   - `per_page`: Integer (Optional, default: 10)
 
-### 8. Search Notes
-- **Endpoint**: `POST /notes/{query}`
-- **Postman Path Variable**:
+### $${\color{green} 8. Search \space Notes}$$
+- **$${\color{orange} Endpoint}$$**: `POST /notes/{query}`
+- **$${\color{orange} Postman \space Path \space Variable}$$**:
   - `query`: Search term
 
-### 9. Update Note
-- **Endpoint**: `PUT /note`
-- **Postman JSON Body**:
+### $${\color{green} 9. Update \space Note}$$
+- **$${\color{orange} Endpoint}$$**: `PUT /note`
+- **$${\color{orange} Postman \space JSON \space Body}$$**:
   ```json
   {
     "user_id": 1,
@@ -88,9 +88,9 @@
 
 ## 🏷 Category Management
 
-### 10. Create Category
-- **Endpoint**: `POST /category`
-- **Postman Form-data Parameters**:
+### $${\color{green} 10. Create \space Category}$$
+- **$${\color{orange} Endpoint}$$**: `POST /category`
+- **$${\color{orange} Postman \space Form-data \space Parameters}$$**:
   ```
   user_id: 1
   name: Work
@@ -98,9 +98,9 @@
   avatar: (File upload)
   ```
 
-### 11. Fetch Categories
-- **Endpoint**: `GET /categories`
-- **Postman Query Parameters**:
+### $${\color{green} 11. Fetch \space Categories}$$
+- **$${\color{orange} Endpoint}$$**: `GET /categories`
+- **$${\color{orange} Postman \space Query \space Parameters}$$**:
   - `user_id`: Integer
 
 ## 🛡 Security Features
