@@ -46,6 +46,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
         if (state.event == UserEvents.updateProfileSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
+              backgroundColor: Colors.green,
               content: Text('Profile updated successfully'),
               duration: Duration(seconds: 2),
             ),

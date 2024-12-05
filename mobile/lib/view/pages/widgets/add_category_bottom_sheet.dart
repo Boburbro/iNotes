@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:inotes/view/utilities/utils.dart';
 import '../../../core/provider/category/category_bloc.dart';
 import '../../../core/service/local/cache_service.dart';
 import '../../utilities/colors.dart';
@@ -63,6 +64,7 @@ class _AddCategoryBottomSheetState extends State<AddCategoryBottomSheet> with _A
           TextField(
             controller: nameController,
             decoration: InputDecoration(
+              errorText: categoryExistMessage,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -111,21 +113,20 @@ class _AddCategoryBottomSheetState extends State<AddCategoryBottomSheet> with _A
               return ElevatedButton(
                 onPressed: () async {
                   if (nameController.text.trim().isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter a category name')),
-                    );
+                    ViewUtils.showTopSnackBar(context: context, message: 'Please enter a category name');
                     return;
                   }
                   if (_avatarPath == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please select a category avatar')),
-                    );
+                    ViewUtils.showTopSnackBar(context: context, message: 'Please select a category avatar');
                     return;
                   }
                   if (_selectedColor == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please select a category color')),
-                    );
+                    ViewUtils.showTopSnackBar(context: context, message: 'Please select a category color');
+                    return;
+                  }
+
+                  if (categoryExistMessage != null) {
+                    ViewUtils.showTopSnackBar(context: context, message: 'Category already exist');
                     return;
                   }
 
@@ -165,6 +166,7 @@ mixin _AddCategoryBottomSheetMixin on State<AddCategoryBottomSheet> {
 
   Uint8List? _avatarPath;
   Color? _selectedColor;
+  String? categoryExistMessage;
 
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
@@ -175,5 +177,23 @@ mixin _AddCategoryBottomSheetMixin on State<AddCategoryBottomSheet> {
       _avatarPath = await imageFile.readAsBytes();
       setState(() {});
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    nameController.addListener(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final categories = await CacheService().getCategories();
+        final isExist = categories.any((category) => category.name == nameController.text.trim());
+
+        if (isExist) {
+          setState(() => categoryExistMessage = 'Category already exist');
+        } else {
+          setState(() => categoryExistMessage = null);
+        }
+      });
+    });
   }
 }
