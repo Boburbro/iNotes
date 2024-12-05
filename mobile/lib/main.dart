@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nested/nested.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'view/main_view.dart';
 import 'core/provider/auth/auth_bloc.dart';
@@ -22,7 +23,7 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SecureStorageCacheService.init();
-  //(await SharedPreferences.getInstance()).clear();
+  // (await SharedPreferences.getInstance()).clear();
   runApp(const MyApp());
 }
 
