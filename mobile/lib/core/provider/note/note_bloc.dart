@@ -1,6 +1,6 @@
-import 'package:bloc/bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../models/category.dart';
+import 'package:inotes/core/provider/category/category_bloc.dart';
+import 'package:inotes/main.dart';
 import '../../models/note.dart';
 import '../../models/response.dart';
 import '../../utils/note_helper.dart';
@@ -30,7 +30,9 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
         case NoteEvents.updateNoteStart:
           await _onUpdateNoteStart(event, emit);
           break;
-
+        case NoteEvents.deleteNotesStart:
+          await _onDeleteNotesStart(event, emit);
+          break;
         default:
       }
     });
@@ -43,15 +45,9 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
       final Note? note = await _service.addNote(noteJson: event.payload);
       if (note == null) return;
 
-      final categories = state.categories?.data;
-      if (categories != null) {
-        ListHelper.incrementCount(
-          categories,
-          (category) => category.name == note.category,
-          (category) => category.notesCount,
-          (category, newCount) => category.copyWith(notesCount: newCount),
-        );
-      }
+      final payload = {'category_name': note.category};
+      final event0 = CategoryEvent.incrementNotesCountStart(payload: payload);
+      navigatorKey.currentContext?.read<CategoryBloc>().add(event0);
 
       final recentNotes = state.recentNotes?.data;
       if (recentNotes != null) {
@@ -189,15 +185,9 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
           );
         }
 
-        final categories = state.categories?.data;
-        if (categories != null) {
-          ListHelper.decrementCount(
-            categories,
-            (category) => category.name == event.payload['category'],
-            (category) => category.notesCount,
-            (category, newCount) => category.copyWith(notesCount: newCount),
-          );
-        }
+        final payload = {'category_name': event.payload['category']};
+        final event0 = CategoryEvent.decrementNotesCountStart(payload: payload);
+        navigatorKey.currentContext?.read<CategoryBloc>().add(event0);
       }
 
       emit(state);
@@ -252,7 +242,8 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
         }
       }
 
-      emit(state);
+      // if you back to `notes view` from `note editor view`, you need to fetch notes again
+      emit(state.copyWith(event: NoteEvents.fetchNotesByCategorySuccess));
     } catch (error, stackTrace) {
       AppLog.instance.error(
         'Failed to update note',
@@ -262,6 +253,38 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
 
       emit(state.copyWith(
         event: NoteEvents.updateNoteFailure,
+      ));
+    }
+  }
+
+  Future<void> _onDeleteNotesStart(NoteEvent event, Emitter<NoteState> emit) async {
+    try {
+      final recentNotes = state.recentNotes?.data;
+      if (recentNotes != null) {
+        ListHelper.removeItems(
+          recentNotes,
+          (note) => note.categoryId == event.payload['category_id'],
+        );
+      }
+
+      final notesByCategory = state.notesByCategory?[event.payload['category']]?.data;
+      if (notesByCategory != null) {
+        ListHelper.removeItems<Note>(
+          state.notesByCategory?[event.payload['category']]?.data ?? [],
+          (note) => note.categoryId == event.payload['category_id'],
+        );
+      }
+
+      emit(state.copyWith(event: NoteEvents.fetchRecentNotesSuccess));
+    } catch (error, stackTrace) {
+      AppLog.instance.error(
+        'Failed to delete note',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      emit(state.copyWith(
+        event: NoteEvents.deleteNoteFailure,
       ));
     }
   }

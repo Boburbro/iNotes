@@ -20,6 +20,8 @@ enum NoteEvents {
   updateNoteStart,
   updateNoteSuccess,
   updateNoteFailure,
+
+  deleteNotesStart,
 }
 
 class NoteEvent {
@@ -46,5 +48,9 @@ class NoteEvent {
 
   NoteEvent.updateNoteStart({required this.payload}) {
     event = NoteEvents.updateNoteStart;
+  }
+
+  NoteEvent.deleteNotesStart({required this.payload}) {
+    event = NoteEvents.deleteNotesStart;
   }
 }
