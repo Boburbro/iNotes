@@ -25,7 +25,7 @@ class LoginPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    'NoteApp',
+                    'iNotes',
                     style: TextStyle(
                       fontSize: 36,
                       fontWeight: FontWeight.bold,
@@ -172,7 +172,7 @@ class RegisterPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    'NoteApp',
+                    'iNotes',
                     style: TextStyle(
                       fontSize: 36,
                       fontWeight: FontWeight.bold,
