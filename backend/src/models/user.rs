@@ -22,11 +22,22 @@ pub struct RegisterForm {
     pub password: String,
 }
 
+impl RegisterForm {
+    pub fn from_json(json: &serde_json::Value) -> Self {
+        serde_json::from_value(json.clone()).unwrap()
+    }
+}
+
 #[derive(Deserialize)]
 pub struct LoginForm {
-    pub email: Option<String>,
     pub username: String,
     pub password: String,
+}
+
+impl LoginForm {
+    pub fn from_json(json: &serde_json::Value) -> Self {
+        serde_json::from_value(json.clone()).unwrap()
+    }
 }
 
 lazy_static::lazy_static! {

@@ -1,29 +1,44 @@
 use actix_web::{post, web, HttpResponse, Responder};
 use log::error;
-use serde_json::json;
+use serde_json::{json, Value};
 
 use crate::{
     db,
-    models::{LoginForm, RegisterForm, EMAIL_REGEX, USERNAME_REGEX},
+    models::{
+        JsonParams, LoginForm, RegisterForm, RequestContext, RequestContextParams, EMAIL_REGEX,
+        USERNAME_REGEX,
+    },
     state::AppState,
 };
 
 #[post("/auth/login")]
-async fn login(data: web::Data<AppState>, form: web::Json<LoginForm>) -> impl Responder {
-    let conn = data
-        .pool
-        .get()
-        .map_err(|e| {
-            error!("Failed to get connection from pool: {}", e);
-            return HttpResponse::InternalServerError().json(json!({"message:":e.to_string()}));
-        })
-        .unwrap();
+async fn login(
+    data: web::Data<AppState>,
+    json: web::Json<JsonParams>,
+    req: actix_web::HttpRequest,
+) -> impl Responder {
+    let params = RequestContextParams {
+        json_params: Some(json.into_inner()),
+        ..Default::default()
+    };
 
-    match db::login(&form.username, &form.password, &conn) {
+    let context = match RequestContext::new(req, &data, params) {
+        Ok(ctx) => ctx,
+        Err(err) => return err,
+    };
+
+    let json_params = context.params.json_params.unwrap();
+
+    let json_value: Value = serde_json::json!({
+        "username": json_params.username,
+        "password": json_params.password,
+    });
+
+    let form = LoginForm::from_json(&json_value);
+
+    match db::login(&form.username, &form.password, &context.conn) {
         Ok(user) => {
-            let response = json!({
-                "user": user
-            });
+            let response = json!({"user": user});
             HttpResponse::Ok().json(response)
         }
 
@@ -36,7 +51,31 @@ async fn login(data: web::Data<AppState>, form: web::Json<LoginForm>) -> impl Re
 }
 
 #[post("/auth/register")]
-async fn register(data: web::Data<AppState>, form: web::Json<RegisterForm>) -> impl Responder {
+async fn register(
+    data: web::Data<AppState>,
+    json: web::Json<JsonParams>,
+    req: actix_web::HttpRequest,
+) -> impl Responder {
+    let params = RequestContextParams {
+        json_params: Some(json.into_inner()),
+        ..Default::default()
+    };
+
+    let context = match RequestContext::new(req, &data, params) {
+        Ok(ctx) => ctx,
+        Err(err) => return err,
+    };
+
+    let json_params = context.params.json_params.unwrap();
+
+    let json_value: Value = serde_json::json!({
+        "email": json_params.email,
+        "username": json_params.username,
+        "password": json_params.password,
+    });
+
+    let form = RegisterForm::from_json(&json_value);
+
     // Validate email, username, and name
     let is_email = EMAIL_REGEX.is_match(&form.email);
     let is_username = USERNAME_REGEX.is_match(&form.username);
@@ -56,18 +95,7 @@ async fn register(data: web::Data<AppState>, form: web::Json<RegisterForm>) -> i
         return HttpResponse::BadRequest().body(serde_json::to_string(&json!({"message": "Invalid password. It must be at least 8 characters long and contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character."})).unwrap());
     }
 
-    let conn = data
-        .pool
-        .get()
-        .map_err(|e| {
-            error!("Failed to get connection from pool: {}", e);
-            return HttpResponse::InternalServerError().body(
-                serde_json::to_string(&json!({"message": "Internal Server Error"})).unwrap(),
-            );
-        })
-        .unwrap();
-
-    match db::register(&form.email, &form.username, &form.password, &conn) {
+    match db::register(&form.email, &form.username, &form.password, &context.conn) {
         Ok(user) => {
             let response = json!({
                 "user":user,

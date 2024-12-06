@@ -38,6 +38,9 @@ pub struct JsonParams {
     pub content: Option<String>,
     pub category: Option<String>,
     pub delta: Option<String>,
+    pub email: Option<String>,
+    pub username: Option<String>,
+    pub password: Option<String>,
 }
 
 #[derive(Deserialize)]
