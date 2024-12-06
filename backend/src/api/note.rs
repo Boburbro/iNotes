@@ -100,10 +100,10 @@ async fn add_note(
 
         match db::add_note_to_db(&context.conn, new_note) {
             Ok(note) => HttpResponse::Created().json(note),
-            Err(e) => {
-                error!("Failed to add note to database: {}", e);
+            Err(error_message) => {
+                error!("Failed to add note to database: {}", error_message);
                 HttpResponse::InternalServerError().json(json!({
-                    "message": e.to_string()
+                    "message": error_message.to_string()
                 }))
             }
         }
@@ -145,10 +145,10 @@ async fn fetch_notes_by_category(
             let response = ApiResponse::build(notes, total, &pagination);
             HttpResponse::Ok().json(response)
         }
-        Err(e) => {
-            error!("Failed to fetch notes from database: {}", e);
+        Err(error_message) => {
+            error!("Failed to fetch notes from database: {}", error_message);
             HttpResponse::InternalServerError().json(json!({
-                "message": e.to_string()
+                "message": error_message.to_string()
             }))
         }
     }
@@ -180,12 +180,9 @@ async fn fetch_recent_notes(
             let response = ApiResponse::build(notes, total, &pagination);
             HttpResponse::Ok().json(response)
         }
-        Err(e) => {
-            error!("Failed to fetch recent notes from database: {}", e);
-            HttpResponse::InternalServerError().json(json!({
-                "message": "Internal Server Error"
-            }))
-        }
+        Err(error_message) => HttpResponse::InternalServerError().json(json!({
+            "message": error_message.to_string()
+        })),
     }
 }
 
@@ -212,10 +209,10 @@ async fn delete_note(
 
     match db::delete_note_from_db(&context.conn, note_id, user_id, category_id) {
         Ok(_) => HttpResponse::NoContent().finish(),
-        Err(e) => {
-            error!("Failed to delete note from database: {}", e);
+        Err(error_message) => {
+            error!("Failed to delete note from database: {}", error_message);
             HttpResponse::InternalServerError().json(json!({
-                "message": e.to_string()
+                "message": error_message.to_string()
             }))
         }
     }
@@ -250,10 +247,10 @@ async fn update_note(
 
     match db::update_note_in_db(&context.conn, note_id, user_id, title, content, delta) {
         Ok(note) => HttpResponse::Ok().json(note),
-        Err(e) => {
-            error!("Failed to update note in database: {}", e);
+        Err(error_message) => {
+            error!("Failed to update note in database: {}", error_message);
             HttpResponse::InternalServerError().json(json!({
-                "message": e.to_string()
+                "message": error_message.to_string()
             }))
         }
     }
@@ -287,10 +284,10 @@ async fn search_for_note(
             let response = ApiResponse::build(notes, total, &pagination);
             HttpResponse::Ok().json(response)
         }
-        Err(e) => {
-            error!("Failed to search for note in database: {}", e);
+        Err(error_message) => {
+            error!("Failed to search for note in database: {}", error_message);
             HttpResponse::InternalServerError().json(json!({
-                "message": e.to_string()
+                "message": error_message.to_string()
             }))
         }
     }

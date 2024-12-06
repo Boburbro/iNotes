@@ -30,10 +30,10 @@ async fn get_user(
 
     match db::get_me(&context.conn, user_id) {
         Ok(user) => HttpResponse::Ok().json(user),
-        Err(e) => {
-            error!("Failed to fetch user from database: {}", e);
+        Err(error_message) => {
+            error!("Failed to fetch user from database: {}", error_message);
             HttpResponse::InternalServerError().json(json!({
-                "message": e.to_string()
+                "message": error_message.to_string()
             }))
         }
     }
@@ -90,9 +90,9 @@ async fn update_profile_picture(
 
         match db::update_profile_picture(&context.conn, new_user) {
             Ok(user) => HttpResponse::Created().json(user),
-            Err(err) => {
-                println!("Error updating profile picture: {:?}", err);
-                HttpResponse::BadRequest().json(json!({"message": err.to_string()}))
+            Err(error_message) => {
+                println!("Error updating profile picture: {:?}", error_message);
+                HttpResponse::BadRequest().json(json!({"message": error_message.to_string()}))
             }
         }
     } else {
@@ -121,10 +121,10 @@ async fn delete_account(
 
     match db::delete_account(&context.conn, user_id) {
         Ok(_) => HttpResponse::Ok().finish(),
-        Err(e) => {
-            error!("Failed to delete user account: {}", e);
+        Err(error_message) => {
+            error!("Failed to delete user account: {}", error_message);
             HttpResponse::InternalServerError().json(json!({
-                "message": e.to_string()
+                "message": error_message.to_string()
             }))
         }
     }

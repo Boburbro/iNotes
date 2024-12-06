@@ -1,7 +1,7 @@
-use crate::models::User;
+use crate::{errors::DatabaseError, models::User};
 use rusqlite::{params, Connection, Error};
 
-pub fn login(username: &str, password: &str, conn: &Connection) -> Result<User, rusqlite::Error> {
+pub fn login(username: &str, password: &str, conn: &Connection) -> Result<User, DatabaseError> {
     let mut stmt = conn.prepare(
         "SELECT 
         id, avatar, email, username, password FROM users 
@@ -26,29 +26,14 @@ pub fn login(username: &str, password: &str, conn: &Connection) -> Result<User, 
     match result {
         Ok((user, user_password)) => {
             // Verify the password using bcrypt
-            if bcrypt::verify(password, &user_password).map_err(|_| {
-                Error::SqliteFailure(
-                    rusqlite::ffi::Error::new(rusqlite::ffi::SQLITE_CONSTRAINT),
-                    Some("Username or password incorrect".to_string()),
-                )
-            })? {
-                Ok(user)
-            } else {
-                Err(Error::SqliteFailure(
-                    rusqlite::ffi::Error::new(rusqlite::ffi::SQLITE_CONSTRAINT),
-                    Some("Username or password incorrect".to_string()),
-                ))
+            match bcrypt::verify(password, &user_password) {
+                Ok(true) => Ok(user),
+                Ok(false) => Err(DatabaseError::IncorrectCredentials),
+                Err(_) => Err(DatabaseError::IncorrectCredentials),
             }
         }
-        Err(Error::QueryReturnedNoRows) => Err(Error::SqliteFailure(
-            rusqlite::ffi::Error::new(rusqlite::ffi::SQLITE_INTERNAL),
-            Some("User not found".to_string()),
-        )),
-
-        Err(_) => Err(Error::SqliteFailure(
-            rusqlite::ffi::Error::new(rusqlite::ffi::SQLITE_INTERNAL),
-            Some("Internal server error".to_string()),
-        )),
+        Err(Error::QueryReturnedNoRows) => Err(DatabaseError::UserNotFound),
+        Err(_) => Err(DatabaseError::InternalServerError),
     }
 }
 
@@ -57,15 +42,12 @@ pub fn register(
     username: &str,
     password: &str,
     conn: &Connection,
-) -> Result<User, rusqlite::Error> {
+) -> Result<User, DatabaseError> {
     let mut stmt = conn.prepare("SELECT COUNT(*) FROM users WHERE email = ?1")?;
     let email_count: i64 = stmt.query_row([email], |row| row.get(0))?;
 
     if email_count > 0 {
-        return Err(Error::SqliteFailure(
-            rusqlite::ffi::Error::new(rusqlite::ffi::SQLITE_CONSTRAINT),
-            Some("Email already exists".to_string()),
-        ));
+        return Err(DatabaseError::EmailExists);
     }
 
     // Check if the username already exists
@@ -73,10 +55,7 @@ pub fn register(
     let username_count: i64 = stmt.query_row([username], |row| row.get(0))?;
 
     if username_count > 0 {
-        return Err(Error::SqliteFailure(
-            rusqlite::ffi::Error::new(rusqlite::ffi::SQLITE_CONSTRAINT),
-            Some("Username already exists".to_string()),
-        ));
+        return Err(DatabaseError::UsernameExists);
     }
 
     // Hash the password using bcrypt

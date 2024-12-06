@@ -5,7 +5,6 @@ use serde_json::json;
 
 use crate::{
     db,
-    errors::DatabaseError,
     models::{
         ApiResponse, NewCategory, QueryParams, RequestContext, RequestContextParams,
         ResponseBuilder,
@@ -39,12 +38,9 @@ async fn fetch_categories(
             let response = ApiResponse::build(categories, total, &pagination);
             HttpResponse::Ok().json(response)
         }
-        Err(e) => {
-            error!("Failed to fetch categories from database: {}", e);
-            HttpResponse::InternalServerError().json(json!({
-                "message": "Internal Server Error"
-            }))
-        }
+        Err(error_message) => HttpResponse::InternalServerError().json(json!({
+            "message": error_message.to_string()
+        })),
     }
 }
 
@@ -117,13 +113,9 @@ async fn add_category(
         match db::add_category_to_db(&context.conn, new_category) {
             Ok(product) => HttpResponse::Created().json(product),
 
-            Err(DatabaseError::CategoryExists) => HttpResponse::BadRequest().json(json!({
-                "message": "Categort already exists"
-            })),
-
-            Err(err) => {
-                println!("Error adding category to database: {:?}", err);
-                HttpResponse::InternalServerError().json(json!({"message": err.to_string()}))
+            Err(error_message) => {
+                let json = &json!({"message": error_message.to_string()});
+                HttpResponse::InternalServerError().json(json)
             }
         }
     } else {
@@ -154,10 +146,10 @@ async fn delete_category(
 
     match db::delete_category_from_db(&context.conn, user_id, category_id) {
         Ok(_) => HttpResponse::NoContent().finish(),
-        Err(e) => {
-            error!("Failed to delete category from database: {}", e);
+        Err(error_message) => {
+            error!("Failed to delete category from database: {}", error_message);
             HttpResponse::InternalServerError().json(json!({
-                "message": e.to_string()
+                "message": error_message.to_string()
             }))
         }
     }

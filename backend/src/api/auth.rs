@@ -42,10 +42,10 @@ async fn login(
             HttpResponse::Ok().json(response)
         }
 
-        Err(err) => {
-            error!("Login error: {}", err);
-            return HttpResponse::InternalServerError()
-                .body(serde_json::to_string(&json!({"message": err.to_string()})).unwrap());
+        Err(error_message) => {
+            error!("Login error: {}", error_message);
+            let json = &json!({"message": error_message.to_string()});
+            return HttpResponse::InternalServerError().body(serde_json::to_string(json).unwrap());
         }
     }
 }
@@ -97,16 +97,14 @@ async fn register(
 
     match db::register(&form.email, &form.username, &form.password, &context.conn) {
         Ok(user) => {
-            let response = json!({
-                "user":user,
-            });
+            let response = json!({"user":user});
             HttpResponse::Created().json(response)
         }
 
-        Err(err) => {
-            error!("Registration error: {}", err);
-            return HttpResponse::InternalServerError()
-                .body(serde_json::to_string(&json!({"message": err.to_string()})).unwrap());
+        Err(error_message) => {
+            error!("Registration error: {}", error_message);
+            let json = &json!({"message": error_message.to_string()});
+            return HttpResponse::InternalServerError().body(serde_json::to_string(json).unwrap());
         }
     }
 }
