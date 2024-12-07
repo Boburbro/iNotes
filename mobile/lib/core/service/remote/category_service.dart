@@ -20,7 +20,7 @@ final class CategoryService {
     final queryParameters = {'user_id': userId};
     try {
       final response = await _dio.get('/categories', queryParameters: queryParameters);
-      if (response.statusCode == 200) {
+      if (response.statusCode == HttpStatus.ok) {
         final categories = PaginatedDataResponse<Category>.fromJson(response.data, Category.fromJson);
         return categories;
       }
@@ -46,7 +46,7 @@ final class CategoryService {
         ),
       });
       final response = await _dio.post('/category', data: formData);
-      if (response.statusCode == 201) {
+      if (response.statusCode == HttpStatus.created) {
         return Category.fromJson(response.data);
       }
       throw 'Failed to add category';

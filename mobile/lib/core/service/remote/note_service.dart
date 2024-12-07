@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import '../../models/note.dart';
 import '../../models/response.dart';
@@ -26,7 +28,7 @@ class NoteService {
 
     try {
       final response = await _dio.post('/note', data: formData);
-      if (response.statusCode == 201) {
+      if (response.statusCode == HttpStatus.created) {
         return Note.fromJson(response.data);
       }
       throw 'Failed to add note';
@@ -43,7 +45,7 @@ class NoteService {
     final queryParameters = {'user_id': userId};
     try {
       final response = await _dio.get('/notes', queryParameters: queryParameters);
-      if (response.statusCode == 200) {
+      if (response.statusCode == HttpStatus.ok) {
         final notes = PaginatedDataResponse<Note>.fromJson(response.data, Note.fromJson);
         return notes;
       }
@@ -60,7 +62,7 @@ class NoteService {
     final queryParameters = {'user_id': userId, 'category_id': categoryId};
     try {
       final response = await _dio.get('/notes-by-category', queryParameters: queryParameters);
-      if (response.statusCode == 200) {
+      if (response.statusCode == HttpStatus.ok) {
         final notes = PaginatedDataResponse<Note>.fromJson(response.data, Note.fromJson);
         return notes;
       }
@@ -77,7 +79,7 @@ class NoteService {
     final queryParameters = {'user_id': userId};
     try {
       final response = await _dio.get('/recent-notes', queryParameters: queryParameters);
-      if (response.statusCode == 200) {
+      if (response.statusCode == HttpStatus.ok) {
         final recentNotes = PaginatedDataResponse<Note>.fromJson(response.data, Note.fromJson);
         return recentNotes;
       }
@@ -98,7 +100,7 @@ class NoteService {
     final queryParameters = {'user_id': userId, 'category_id': categoryId, 'note_id': noteId};
     try {
       final response = await _dio.delete('/note', queryParameters: queryParameters);
-      return response.statusCode == 204;
+      return response.statusCode == HttpStatus.noContent;
     } on DioException catch (exception) {
       throw DioErrorHelper.handle(exception);
     } catch (e) {
@@ -123,7 +125,7 @@ class NoteService {
     };
     try {
       final response = await _dio.put('/note', data: data);
-      if (response.statusCode == 200) {
+      if (response.statusCode == HttpStatus.ok) {
         return Note.fromJson(response.data);
       }
       throw 'Failed to update note';
@@ -138,7 +140,7 @@ class NoteService {
   Future<PaginatedDataResponse<Note>?> searchforNotes({required String query}) async {
     try {
       final response = await _dio.post('/notes/$query');
-      if (response.statusCode == 200) {
+      if (response.statusCode == HttpStatus.ok) {
         final notes = PaginatedDataResponse<Note>.fromJson(response.data, Note.fromJson);
         return notes;
       }

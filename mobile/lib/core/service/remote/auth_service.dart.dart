@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:dio/dio.dart';
 import '../../models/auth_form.dart';
 import '../../models/user.dart';
@@ -20,7 +21,7 @@ final class AuthenticationService {
       };
 
       final response = await _dio.post('/auth/login', data: data);
-      if (response.statusCode == 200) {
+      if (response.statusCode == HttpStatus.ok) {
         return AuthResponse.success(response.data);
       }
       throw 'Failed to login';
@@ -41,7 +42,7 @@ final class AuthenticationService {
       };
 
       final response = await _dio.post('/auth/register', data: data);
-      if (response.statusCode == 201) {
+      if (response.statusCode == HttpStatus.created) {
         return AuthResponse.success(response.data);
       }
       throw 'Failed to register';
@@ -58,7 +59,7 @@ final class AuthenticationService {
 
     try {
       final response = await _dio.delete('/delete-account', queryParameters: queryParameters);
-      return response.statusCode == 200;
+      return response.statusCode == HttpStatus.noContent;
     } on DioException catch (exception) {
       final error = jsonDecode(exception.response?.data);
       throw error['message'];

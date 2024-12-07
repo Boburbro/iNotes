@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import '../../models/user.dart';
 import '../../utils/api_client.dart';
@@ -16,7 +18,7 @@ class UserService {
     try {
       final response = await _dio.get('/user', queryParameters: queryParameters);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == HttpStatus.ok) {
         return User.fromJson(response.data);
       }
       throw 'Failed to get user';
@@ -41,7 +43,7 @@ class UserService {
 
     try {
       final response = await _dio.post('/update-profile-picture', data: formData);
-      if (response.statusCode == 201) {
+      if (response.statusCode == HttpStatus.ok) {
         return User.fromJson(response.data);
       }
       throw 'Failed to update profile picture';
