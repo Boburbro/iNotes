@@ -28,19 +28,25 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(data.clone())
+            // User-related services
             .service(api::register)
             .service(api::login)
             .service(api::get_user)
             .service(api::update_profile_picture)
+            .service(api::delete_account)
+            
+            // Note-related services
             .service(api::add_note)
             .service(api::fetch_recent_notes)
             .service(api::delete_note)
             .service(api::update_note)
             .service(api::search_for_note)
             .service(api::fetch_notes_by_category)
+            .service(api::search_for_note_by_category)
+            
+            // Category-related services
             .service(api::add_category)
             .service(api::fetch_categories)
-            .service(api::delete_account)
             .service(api::delete_category)
             .service(Files::new("/uploads", "./uploads").show_files_listing())
     })
