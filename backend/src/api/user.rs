@@ -89,7 +89,7 @@ async fn update_profile_picture(
         };
 
         match db::update_profile_picture(&context.conn, new_user) {
-            Ok(user) => HttpResponse::Created().json(user),
+            Ok(user) => HttpResponse::Ok().json(user),
             Err(error_message) => {
                 println!("Error updating profile picture: {:?}", error_message);
                 HttpResponse::BadRequest().json(json!({"message": error_message.to_string()}))
@@ -120,7 +120,8 @@ async fn delete_account(
     let user_id = query_params.user_id.unwrap();
 
     match db::delete_account(&context.conn, user_id) {
-        Ok(_) => HttpResponse::Ok().finish(),
+        Ok(_) => HttpResponse::NoContent().finish(),
+
         Err(error_message) => {
             error!("Failed to delete user account: {}", error_message);
             HttpResponse::InternalServerError().json(json!({
