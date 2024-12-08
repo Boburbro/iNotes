@@ -293,15 +293,13 @@ async fn search_for_note(
     }
 }
 
-#[post("/notes/{query}/category")]
-async fn search_for_note_by_category(
+#[post("/notes/category")]
+async fn search_for_notes_by_category(
     req: HttpRequest,
     data: web::Data<AppState>,
-    path: web::Path<PathParams>,
     category: web::Query<QueryParams>,
 ) -> impl Responder {
     let params = RequestContextParams {
-        path_params: Some(path.into_inner()),
         query_params: Some(category.into_inner()),
         ..Default::default()
     };
@@ -312,25 +310,22 @@ async fn search_for_note_by_category(
     };
 
     let pagination = context.pagination();
-
-    let path_params = context.params.path_params.unwrap();
     let query_params = context.params.query_params.unwrap();
+    
+    // Add null checks or use .unwrap_or_default() if possible
+    let query = query_params.query.unwrap_or_default();
+    let category = query_params.category.unwrap_or_default();
 
-    let query_string = path_params.query.unwrap();
-    let query = query_string.as_str();
-
-    let category = query_params.category.unwrap();
-
-    match db::search_for_note_by_category_in_db(&context.conn, query, category) {
+    match db::search_for_notes_by_category_in_db(&context.conn, &query, &category) {
         Ok(notes) => {
             let total = notes.len() as u32;
             let response = ApiResponse::build(notes, total, &pagination);
             HttpResponse::Ok().json(response)
         }
-        Err(error_message) => {
-            error!("Failed to search for note in database: {}", error_message);
+        Err(error) => {
+            error!("Failed to search for notes in database: {}", error);
             HttpResponse::InternalServerError().json(json!({
-                "message": error_message.to_string()
+                "message": error.to_string()
             }))
         }
     }
