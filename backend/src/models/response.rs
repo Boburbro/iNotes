@@ -21,6 +21,7 @@ pub struct QueryParams {
     pub per_page: Option<u8>,
     pub category: Option<String>,
     pub category_id: Option<u32>,
+    pub query: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
