@@ -277,9 +277,28 @@ class RegisterPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      'Register',
-                      style: TextStyle(fontSize: 18, color: Colors.white),
+                    child: BlocConsumer<AuthenticationBloc, AuthenticationState>(
+                      listener: (context, state) {
+                        if (state.event == AuthenticationEvents.registerFailure) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(state.authResponse!.failureResponse!.message),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      builder: (context, state) {
+                        if (state.event == AuthenticationEvents.registerStart) {
+                          return const CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          );
+                        }
+                        return const Text(
+                          'Register',
+                          style: TextStyle(fontSize: 18, color: Colors.white),
+                        );
+                      },
                     ),
                   ),
                   const SizedBox(height: 20),

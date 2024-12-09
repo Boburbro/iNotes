@@ -18,9 +18,6 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
         case NoteEvents.addNoteStart:
           await _onAddNoteStart(event, emit);
           break;
-        case NoteEvents.fetchNotesByCategoryStart:
-          await _onfetchNotesByCategoryStart(event, emit);
-          break;
         case NoteEvents.fetchRecentNotesStart:
           await _onfetchRecentNotesStart(event, emit);
           break;
@@ -32,6 +29,12 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
           break;
         case NoteEvents.deleteNotesStart:
           await _onDeleteNotesStart(event, emit);
+          break;
+        case NoteEvents.fetchSearchedNotesStart:
+          await _onfetchSearchResult(event, emit);
+          break;
+        case NoteEvents.fetchSearchedNotesByCategoryStart:
+          await _onfetchSearchResultByCategory(event, emit);
           break;
         default:
       }
@@ -45,7 +48,7 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
       final Note? note = await _service.addNote(noteJson: event.payload);
       if (note == null) return;
 
-      final payload = {'category_name': note.category};
+      final payload = {'category_name': note.category.name};
       final event0 = CategoryEvent.incrementNotesCountStart(payload: payload);
       navigatorKey.currentContext?.read<CategoryBloc>().add(event0);
 
@@ -53,15 +56,6 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
       if (recentNotes != null) {
         ListHelper.addItem(
           recentNotes,
-          note,
-          uniqueChecker: (note0) => note0.id == note.id,
-        );
-      }
-
-      final notesByCategory = state.notesByCategory?[note.category]?.data;
-      if (notesByCategory != null) {
-        ListHelper.addItem(
-          notesByCategory,
           note,
           uniqueChecker: (note0) => note0.id == note.id,
         );
@@ -96,6 +90,7 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
 
     try {
       final PaginatedDataResponse<Note>? recentNotes = await _service.fetchRecentNotes(userId: event.payload['user_id']);
+      if (recentNotes == null) return;
 
       emit(state.copyWith(
         recentNotes: recentNotes,
@@ -114,45 +109,6 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
     }
   }
 
-  Future<void> _onfetchNotesByCategoryStart(NoteEvent event, Emitter<NoteState> emit) async {
-    emit(state.copyWith(
-      event: NoteEvents.fetchNotesByCategoryStart,
-    ));
-
-    final data = state.notesByCategory![event.payload['category']]?.data;
-
-    // If there's existing data and it's not a forced refresh, emit the current state
-    if (data != null && data.isNotEmpty) {
-      emit(state.copyWith(event: NoteEvents.fetchNotesByCategorySuccess));
-      return;
-    }
-
-    try {
-      final PaginatedDataResponse<Note>? notesByCategory = await _service.fetchNotesByCategory(
-        userId: event.payload['user_id'],
-        categoryId: event.payload['category_id'],
-      );
-
-      emit(state.copyWith(
-        notesByCategory: {
-          ...state.notesByCategory!,
-          event.payload['category']: notesByCategory,
-        },
-        event: NoteEvents.fetchNotesByCategorySuccess,
-      ));
-    } catch (error, stackTrace) {
-      AppLog.instance.error(
-        'Failed to fetch recent notes',
-        error: error,
-        stackTrace: stackTrace,
-      );
-
-      emit(state.copyWith(
-        event: NoteEvents.fetchNotesByCategoryFailure,
-      ));
-    }
-  }
-
   Future<void> _onDeleteNoteStart(NoteEvent event, Emitter<NoteState> emit) async {
     emit(state.copyWith(
       event: NoteEvents.deleteNoteStart,
@@ -161,8 +117,7 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
     try {
       final bool isDeleted = await _service.deleteNote(
         noteId: event.payload['note_id'],
-        userId: event.payload['user_id'],
-        categoryId: event.payload['category_id'],
+        category: event.payload['category'],
       );
 
       if (isDeleted) {
@@ -177,15 +132,17 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
             (note) => note.id == event.payload['note_id'],
           );
         }
-        final notesByCategory = state.notesByCategory?[event.payload['category']]?.data;
-        if (notesByCategory != null) {
-          ListHelper.removeItem<Note>(
-            state.notesByCategory?[event.payload['category']]?.data ?? [],
+        final searchedNotes = state.searchedNotes?.data;
+        if (searchedNotes != null) {
+          ListHelper.removeItem(
+            searchedNotes,
             (note) => note.id == event.payload['note_id'],
           );
+          emit(state.copyWith(event: NoteEvents.fetchSearchedNotesByCategorySuccess));
         }
 
-        final payload = {'category_name': event.payload['category']};
+        final category = event.payload['category'];
+        final payload = {'category_name': category.name};
         final event0 = CategoryEvent.decrementNotesCountStart(payload: payload);
         navigatorKey.currentContext?.read<CategoryBloc>().add(event0);
       }
@@ -232,10 +189,10 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
           );
         }
 
-        final notesByCategory = state.notesByCategory?[event.payload['category']]?.data;
-        if (notesByCategory != null) {
+        final searchedNotes = state.searchedNotes?.data;
+        if (searchedNotes != null) {
           ListHelper.updateItem(
-            notesByCategory,
+            searchedNotes,
             (note) => note.id == updateNote.id,
             updateNote,
           );
@@ -243,7 +200,7 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
       }
 
       // if you back to `notes view` from `note editor view`, you need to fetch notes again
-      emit(state.copyWith(event: NoteEvents.fetchNotesByCategorySuccess));
+      emit(state.copyWith(event: NoteEvents.fetchSearchedNotesByCategorySuccess));
     } catch (error, stackTrace) {
       AppLog.instance.error(
         'Failed to update note',
@@ -258,20 +215,13 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
   }
 
   Future<void> _onDeleteNotesStart(NoteEvent event, Emitter<NoteState> emit) async {
+    final ctr = event.payload['category'];
     try {
       final recentNotes = state.recentNotes?.data;
       if (recentNotes != null) {
         ListHelper.removeItems(
           recentNotes,
-          (note) => note.categoryId == event.payload['category_id'],
-        );
-      }
-
-      final notesByCategory = state.notesByCategory?[event.payload['category']]?.data;
-      if (notesByCategory != null) {
-        ListHelper.removeItems<Note>(
-          state.notesByCategory?[event.payload['category']]?.data ?? [],
-          (note) => note.categoryId == event.payload['category_id'],
+          (note) => note.categoryId == ctr.id,
         );
       }
 
@@ -285,6 +235,60 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
 
       emit(state.copyWith(
         event: NoteEvents.deleteNoteFailure,
+      ));
+    }
+  }
+
+  Future<void> _onfetchSearchResult(NoteEvent event, Emitter<NoteState> emit) async {
+    emit(state.copyWith(event: NoteEvents.fetchSearchedNotesStart));
+    try {
+      if (event.payload['query'].isEmpty) {
+        state.searchedNotes?.data.clear();
+        emit(state.copyWith(event: NoteEvents.fetchSearchedNotesSuccess));
+        return;
+      }
+      final searchedNotes = await _service.searchforNotes(query: event.payload['query']);
+      if (searchedNotes == null) return;
+
+      emit(state.copyWith(
+        searchedNotes: searchedNotes,
+        event: NoteEvents.fetchSearchedNotesSuccess,
+      ));
+    } catch (error, stackTrace) {
+      AppLog.instance.error(
+        'Failed to fetch search results',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      emit(state.copyWith(
+        event: NoteEvents.fetchSearchedNotesFailed,
+      ));
+    }
+  }
+
+  Future<void> _onfetchSearchResultByCategory(NoteEvent event, Emitter<NoteState> emit) async {
+    emit(state.copyWith(event: NoteEvents.fetchSearchedNotesByCategoryStart));
+    try {
+      final searchedNotes = await _service.searchforNotesByCategory(
+        query: event.payload['query'],
+        category: event.payload['category'],
+      );
+      if (searchedNotes == null) return;
+
+      emit(state.copyWith(
+        searchedNotes: searchedNotes,
+        event: NoteEvents.fetchSearchedNotesByCategorySuccess,
+      ));
+    } catch (error, stackTrace) {
+      AppLog.instance.error(
+        'Failed to fetch search results',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      emit(state.copyWith(
+        event: NoteEvents.fetchSearchedNotesByCategoryFailed,
       ));
     }
   }

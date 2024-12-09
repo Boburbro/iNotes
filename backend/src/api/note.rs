@@ -293,7 +293,7 @@ async fn search_for_note(
     }
 }
 
-#[post("/notes/category")]
+#[get("/notes/category")]
 async fn search_for_notes_by_category(
     req: HttpRequest,
     data: web::Data<AppState>,

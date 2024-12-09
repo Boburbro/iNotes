@@ -1,6 +1,8 @@
 use crate::utils::color_to_hex;
 use serde::{Deserialize, Serialize};
 
+use super::Category;
+
 #[derive(Serialize, Deserialize)]
 pub struct Note {
     pub id: u32,
@@ -8,7 +10,7 @@ pub struct Note {
     pub category_id: u32,
     pub title: String,
     pub content: String,
-    pub category: String,
+    pub category: Category,
     pub delta: Option<String>,
     pub created_at: String,
     pub updated_at: Option<String>,
@@ -16,7 +18,7 @@ pub struct Note {
     pub color: u32,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct NewNote {
     pub user_id: u32,
     pub category_id: u32,

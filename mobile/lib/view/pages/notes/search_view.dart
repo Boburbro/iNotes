@@ -1,10 +1,8 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:inotes/core/provider/note/note_bloc.dart';
+import 'package:inotes/view/pages/widgets/search_debouncer.dart';
 import '../../../core/models/note.dart';
-import '../../../core/provider/search/search_bloc.dart';
-import '../../../core/provider/search/search_event.dart';
-import '../../../core/provider/search/search_state.dart';
 import 'note_editor_view.dart';
 import '../../utilities/extensions.dart';
 
@@ -16,28 +14,22 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
+  late SearchDebouncer _searchDebouncer;
   final TextEditingController _searchController = TextEditingController();
-  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(_onSearchChanged);
+    _searchDebouncer = SearchDebouncer(
+      searchController: _searchController,
+      onSearchChanged: (query) => context.read<NoteBloc>().add(NoteEvent.fetchSearchedNotesStart(payload: query)),
+    );
   }
 
   @override
   void dispose() {
-    _debounce?.cancel();
-    _searchController.dispose();
+    _searchDebouncer.dispose();
     super.dispose();
-  }
-
-  void _onSearchChanged() {
-    if (_debounce?.isActive ?? false) _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () {
-      final query = _searchController.text.trim();
-      context.read<SearchBloc>().add(SearchEvent.fetchSearchResults(query: query));
-    });
   }
 
   @override
@@ -67,12 +59,12 @@ class _SearchPageState extends State<SearchPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: BlocBuilder<SearchBloc, SearchState>(
+        child: BlocBuilder<NoteBloc, NoteState>(
           builder: (context, state) {
-            if (state.event == SearchEvents.fetchSearchResults) {
+            if (state.event == NoteEvents.fetchSearchedNotesStart) {
               return const Center(child: CircularProgressIndicator());
-            } else if (state.event == SearchEvents.successSearchResult) {
-              final notes = state.notes?.data ?? [];
+            } else if (state.event == NoteEvents.fetchSearchedNotesSuccess) {
+              final notes = state.searchedNotes?.data ?? [];
               if (notes.isEmpty) {
                 return const Center(child: Text('No notes found.'));
               }
@@ -83,7 +75,7 @@ class _SearchPageState extends State<SearchPage> {
                   return _buildNoteCard(note);
                 },
               );
-            } else if (state.event == SearchEvents.failedSearchResults) {
+            } else if (state.event == NoteEvents.fetchSearchedNotesFailed) {
               return const Center(child: Text('Failed to fetch search results.'));
             }
             return const Center(child: Text('Start searching for notes.'));

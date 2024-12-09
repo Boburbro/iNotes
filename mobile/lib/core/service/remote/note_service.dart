@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:inotes/core/models/category.dart';
 import '../../models/note.dart';
 import '../../models/response.dart';
 import '../../utils/api_client.dart';
@@ -93,11 +94,10 @@ class NoteService {
   }
 
   Future<bool> deleteNote({
-    required int userId,
-    required int categoryId,
+    required Category category,
     required int noteId,
   }) async {
-    final queryParameters = {'user_id': userId, 'category_id': categoryId, 'note_id': noteId};
+    final queryParameters = {'user_id': category.userId, 'category_id': category.id, 'note_id': noteId};
     try {
       final response = await _dio.delete('/note', queryParameters: queryParameters);
       return response.statusCode == HttpStatus.noContent;
@@ -140,6 +140,26 @@ class NoteService {
   Future<PaginatedDataResponse<Note>?> searchforNotes({required String query}) async {
     try {
       final response = await _dio.post('/notes/$query');
+      if (response.statusCode == HttpStatus.ok) {
+        final notes = PaginatedDataResponse<Note>.fromJson(response.data, Note.fromJson);
+        return notes;
+      }
+      throw 'Failed to load notes';
+    } on DioException catch (exception) {
+      throw DioErrorHelper.handle(exception);
+    } catch (e) {
+      AppLog.instance.debug('Fetch Notes Error Message: $e');
+      throw 'Failed to load notes';
+    }
+  }
+
+  Future<PaginatedDataResponse<Note>?> searchforNotesByCategory({required String query, required String category}) async {
+    final queryParameters = {
+      'category': category,
+      if (query.isNotEmpty) 'query': query,
+    };
+    try {
+      final response = await _dio.get('/notes/category', queryParameters: queryParameters);
       if (response.statusCode == HttpStatus.ok) {
         final notes = PaginatedDataResponse<Note>.fromJson(response.data, Note.fromJson);
         return notes;

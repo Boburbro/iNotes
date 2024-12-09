@@ -1,10 +1,12 @@
+import 'package:inotes/core/models/category.dart';
+
 class Note {
   final int id;
   final int userId;
   final int categoryId;
   final String title;
   final String content;
-  final String category;
+  final Category category;
   final DateTime createdAt;
   final DateTime? updatedAt;
   final String? delta;
@@ -29,7 +31,7 @@ class Note {
       userId: json['user_id'],
       categoryId: json['category_id'],
       title: json['title'],
-      category: json['category'],
+      category: Category.fromJson(json['category']),
       content: json['content'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at']) : null,
@@ -44,7 +46,7 @@ class Note {
         'category_id': categoryId,
         'content': content,
         'title': title,
-        'category': category,
+        'category': category.toJson(),
         'created_at': createdAt.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
         'delta': delta,

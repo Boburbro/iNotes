@@ -36,9 +36,7 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
   }
 
   Future<void> _onAddCategoryStart(CategoryEvent event, Emitter<CategoryState> emit) async {
-    emit(state.copyWith(
-      event: CategoryEvents.addCategoryStart,
-    ));
+    emit(state.copyWith(event: CategoryEvents.addCategoryStart));
 
     try {
       final Category? category = await _service.addCategory(categoryJson: event.payload);
@@ -58,9 +56,7 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
         stackTrace: stackTrace,
       );
 
-      emit(state.copyWith(
-        event: CategoryEvents.addCategoryFailure,
-      ));
+      emit(state.copyWith(event: CategoryEvents.addCategoryFailure));
     }
   }
 
@@ -91,9 +87,7 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
         stackTrace: stackTrace,
       );
 
-      emit(state.copyWith(
-        event: CategoryEvents.fetchCategoriesFailure,
-      ));
+      emit(state.copyWith(event: CategoryEvents.fetchCategoriesFailure));
     }
   }
 
@@ -103,10 +97,9 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
     ));
 
     try {
-      final bool? result = await _service.deleteCategory(
-        userId: event.payload['user_id'],
-        categoryId: event.payload['category_id'],
-      );
+      final Category ctr = event.payload['category'];
+      final bool? result = await _service.deleteCategory(category: ctr);
+
       if (result == null) {
         emit(state.copyWith(
           event: CategoryEvents.deleteCategoryFailure,
@@ -118,12 +111,15 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
       if (categories != null) {
         ListHelper.removeItem(
           categories,
-          (category) => category.id == event.payload['category_id'],
+          (category) => category.id == ctr.id,
         );
+        emit(state.copyWith(event: CategoryEvents.fetchCategoriesSuccess));
       }
 
       final event0 = NoteEvent.deleteNotesStart(payload: event.payload);
       navigatorKey.currentContext?.read<NoteBloc>().add(event0);
+
+      await _cacheService.removeCategory(ctr.name);
 
       emit(state.copyWith(event: CategoryEvents.deleteCategorySuccess));
     } catch (error, stackTrace) {
@@ -133,9 +129,7 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
         stackTrace: stackTrace,
       );
 
-      emit(state.copyWith(
-        event: CategoryEvents.deleteCategoryFailure,
-      ));
+      emit(state.copyWith(event: CategoryEvents.deleteCategoryFailure));
     }
   }
 
@@ -168,4 +162,5 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
   }
 
   final _service = CategoryService.instance;
+  final _cacheService = CacheService();
 }

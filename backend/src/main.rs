@@ -42,7 +42,7 @@ async fn main() -> std::io::Result<()> {
             .service(api::update_note)
             .service(api::search_for_note)
             .service(api::fetch_notes_by_category)
-            .service(api::search_for_note_by_category)
+            .service(api::search_for_notes_by_category)
             
             // Category-related services
             .service(api::add_category)

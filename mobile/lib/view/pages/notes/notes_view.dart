@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:inotes/view/pages/widgets/search_debouncer.dart';
+import 'package:inotes/view/utilities/utils.dart';
 import '../../../core/models/category.dart';
 import '../../../core/models/note.dart';
 import '../../../core/provider/note/note_bloc.dart';
@@ -17,15 +19,30 @@ class NotesView extends StatefulWidget {
 }
 
 class _NotesViewState extends State<NotesView> {
+  late SearchDebouncer _searchDebouncer;
+  final TextEditingController _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
-    final payload = {
-      'category_id': widget.category.id,
-      'user_id': widget.category.userId,
-      'category': widget.category.name,
-    };
-    context.read<NoteBloc>().add(NoteEvent.fetchNotesByCategoryStart(payload: payload));
+
+    _searchDebouncer = SearchDebouncer(
+      category: widget.category.name,
+      searchController: _searchController,
+      onSearchChanged: (payload) {
+        context.read<NoteBloc>().add(NoteEvent.fetchSearchedNotesByCategoryStart(payload: payload));
+      },
+    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _searchDebouncer.initialize();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchDebouncer.dispose();
+    super.dispose();
   }
 
   @override
@@ -70,10 +87,11 @@ class _NotesViewState extends State<NotesView> {
                     ),
                     const SizedBox(height: 20),
                     TextField(
+                      controller: _searchController,
                       decoration: InputDecoration(
+                        filled: true,
                         hintText: 'Search notes...',
                         hintStyle: const TextStyle(color: Colors.black54, fontSize: 16),
-                        filled: true,
                         fillColor: const Color.fromARGB(255, 255, 255, 255),
                         contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 20.0),
                         border: OutlineInputBorder(
@@ -94,24 +112,16 @@ class _NotesViewState extends State<NotesView> {
             // Notes Grid Section
             BlocBuilder<NoteBloc, NoteState>(
               builder: (context, state) {
-                if (state.event == NoteEvents.fetchNotesByCategoryStart) {
+                if (state.event == NoteEvents.fetchSearchedNotesByCategoryStart) {
                   return const SliverToBoxAdapter(
-                    child: Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    child: Center(child: CircularProgressIndicator()),
                   );
-                } else if (state.event == NoteEvents.fetchNotesByCategorySuccess) {
-                  final notes = state.notesByCategory![widget.category.name]?.data;
+                }
 
-                  if (notes == null) {
-                    return const SliverToBoxAdapter(
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  }
+                if (state.event == NoteEvents.fetchSearchedNotesByCategorySuccess) {
+                  final notes = state.searchedNotes?.data;
 
-                  if (notes.isEmpty) {
+                  if (notes == null || notes.isEmpty) {
                     return const SliverToBoxAdapter(
                       child: Padding(
                         padding: EdgeInsets.only(top: 50),
@@ -134,7 +144,9 @@ class _NotesViewState extends State<NotesView> {
                       childCount: notes.length,
                     ),
                   );
-                } else {
+                }
+
+                if (state.event == NoteEvents.fetchSearchedNotesByCategoryFailed) {
                   return const SliverToBoxAdapter(
                     child: Center(
                       child: Text(
@@ -144,6 +156,10 @@ class _NotesViewState extends State<NotesView> {
                     ),
                   );
                 }
+
+                return const SliverToBoxAdapter(
+                  child: Center(child: Text('Start searching for notes.')),
+                );
               },
             ),
           ],
@@ -162,6 +178,20 @@ class _NotesViewState extends State<NotesView> {
             existingNote: note,
           ),
         ),
+      ),
+      onLongPress: () => ViewUtils.showDeleteConfirmationBottomSheet(
+        context: context,
+        title: "Delete Note?",
+        description: "Are you sure you want to permanently delete this note? This action cannot be undone.",
+        icon: Icons.warning_amber_rounded,
+        iconColor: Colors.red,
+        onDelete: () {
+          final payload = {
+            'note_id': note.id,
+            'category': note.category,
+          };
+          context.read<NoteBloc>().add(NoteEvent.deleteNoteStart(payload: payload));
+        },
       ),
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),

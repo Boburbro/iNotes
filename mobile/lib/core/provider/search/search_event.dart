@@ -1,14 +1,22 @@
-enum SearchEvents {
-  fetchSearchResults,
-  successSearchResult,
-  failedSearchResults,
-}
+// enum SearchEvents {
+//   fetchSearchedNotesStart,
+//   fetchSearchedNotesSuccess,
+//   fetchSearchedNotesFailed,
 
-class SearchEvent {
-  SearchEvents? type;
-  dynamic query;
+//   fetchSearchedNotesByCategoryStart,
+//   fetchSearchedNotesByCategorySuccess,
+//   fetchSearchedNotesByCategoryFailed,
+// }
 
-  SearchEvent.fetchSearchResults({required this.query}) {
-    type = SearchEvents.fetchSearchResults;
-  }
-}
+// class SearchEvent {
+//   SearchEvents? type;
+//   dynamic payload;
+
+//   SearchEvent.fetchSearchResult({required this.payload}) {
+//     type = SearchEvents.fetchSearchResult;
+//   }
+
+//   SearchEvent.fetchSearchResultByCategory({required this.payload}) {
+//     type = SearchEvents.fetchSearchResultByCategory;
+//   }
+// }

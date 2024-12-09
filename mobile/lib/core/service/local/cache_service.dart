@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class ICacheService {
   Future setCategory(Json category);
+  Future removeCategory(String name);
   Future<List<Category>> getCategories();
 
   Future<void> changeTheme(String theme);
@@ -61,6 +62,11 @@ class CacheService implements ICacheService {
     }
 
     return allPrefs;
+  }
+  
+  @override
+  Future removeCategory(String name) async{
+    return (await _sharedPreferences).remove(name);
   }
 }
 

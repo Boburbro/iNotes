@@ -58,8 +58,8 @@ final class CategoryService {
     }
   }
 
-  Future<bool?> deleteCategory({required int userId, required int categoryId}) async {
-    final queryParameters = {'user_id': userId, 'category_id': categoryId};
+  Future<bool?> deleteCategory({required Category category}) async {
+    final queryParameters = {'user_id': category.userId, 'category_id': category.id};
     try {
       final response = await _dio.delete('/category/delete', queryParameters: queryParameters);
       return response.statusCode == HttpStatus.noContent;

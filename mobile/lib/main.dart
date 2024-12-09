@@ -3,13 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nested/nested.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'view/main_view.dart';
 import 'core/provider/auth/auth_bloc.dart';
 import 'core/provider/category/category_bloc.dart';
 import 'core/provider/note/note_bloc.dart';
-import 'core/provider/search/search_bloc.dart';
 import 'core/provider/theme/theme_cubit.dart';
 import 'core/provider/theme/theme_state.dart';
 import 'core/provider/user/user_bloc.dart';
@@ -71,7 +69,6 @@ class MyApp extends StatelessWidget {
       BlocProvider(create: (context) => UserBloc()),
       BlocProvider(create: (context) => NoteBloc()),
       BlocProvider(create: (context) => CategoryBloc()),
-      BlocProvider(create: (context) => SearchBloc()),
       BlocProvider(create: (context) => ThemeCubit()..getTheme),
       BlocProvider(
         create: (context) => AuthenticationBloc()..add(AuthenticationEvent.checkAuthentication()),

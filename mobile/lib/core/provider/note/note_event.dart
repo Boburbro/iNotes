@@ -5,9 +5,9 @@ enum NoteEvents {
   addNoteSuccess,
   addNoteFailure,
 
-  fetchNotesByCategoryStart,
-  fetchNotesByCategorySuccess,
-  fetchNotesByCategoryFailure,
+  // fetchNotesByCategoryStart,
+  // fetchNotesByCategorySuccess,
+  // fetchNotesByCategoryFailure,
 
   fetchRecentNotesStart,
   fetchRecentNotesSuccess,
@@ -22,6 +22,14 @@ enum NoteEvents {
   updateNoteFailure,
 
   deleteNotesStart,
+
+  fetchSearchedNotesStart,
+  fetchSearchedNotesSuccess,
+  fetchSearchedNotesFailed,
+
+  fetchSearchedNotesByCategoryStart,
+  fetchSearchedNotesByCategorySuccess,
+  fetchSearchedNotesByCategoryFailed,
 }
 
 class NoteEvent {
@@ -33,10 +41,10 @@ class NoteEvent {
     payload = noteJson;
   }
 
-  NoteEvent.fetchNotesByCategoryStart({required this.payload}) {
-    // payload - categoryId, userId, categoryName
-    event = NoteEvents.fetchNotesByCategoryStart;
-  }
+  // NoteEvent.fetchNotesByCategoryStart({required this.payload}) {
+  //   // payload - categoryId, userId, categoryName
+  //   event = NoteEvents.fetchNotesByCategoryStart;
+  // }
 
   NoteEvent.fetchRecentNotesStart({this.payload}) {
     event = NoteEvents.fetchRecentNotesStart;
@@ -52,5 +60,13 @@ class NoteEvent {
 
   NoteEvent.deleteNotesStart({required this.payload}) {
     event = NoteEvents.deleteNotesStart;
+  }
+
+  NoteEvent.fetchSearchedNotesStart({required this.payload}) {
+    event = NoteEvents.fetchSearchedNotesStart;
+  }
+
+  NoteEvent.fetchSearchedNotesByCategoryStart({required this.payload}) {
+    event = NoteEvents.fetchSearchedNotesByCategoryStart;
   }
 }
