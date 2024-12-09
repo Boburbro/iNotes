@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, themeState) {
           return MaterialApp(
-            title: 'Note app',
+            title: 'iNotes',
             debugShowCheckedModeBanner: false,
             theme: themeState.theme,
             navigatorKey: navigatorKey,
