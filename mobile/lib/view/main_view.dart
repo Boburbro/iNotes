@@ -136,11 +136,7 @@ class _MainViewState extends State<MainView> {
                             onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(
-                                  builder: (context) {
-                                    return NoteEditorView(existingNote: recentNote);
-                                  },
-                                ),
+                                MaterialPageRoute(builder: (context) => NoteEditorView(existingNote: recentNote)),
                               );
                             },
                             onLongPress: () => ViewUtils.showDeleteConfirmationBottomSheet(
@@ -151,9 +147,7 @@ class _MainViewState extends State<MainView> {
                               iconColor: Colors.red,
                               onDelete: () {
                                 final payload = {
-                                  'user_id': recentNote.userId,
                                   'note_id': recentNote.id,
-                                  'category_id': recentNote.categoryId,
                                   'category': recentNote.category,
                                 };
                                 context.read<NoteBloc>().add(NoteEvent.deleteNoteStart(payload: payload));
@@ -248,9 +242,7 @@ class _MainViewState extends State<MainView> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => NotesView(category: category),
-                              ),
+                              MaterialPageRoute(builder: (context) => NotesView(category: category)),
                             );
                           },
                           onLongPress: () {
@@ -262,7 +254,7 @@ class _MainViewState extends State<MainView> {
                               icon: Icons.delete_forever,
                               iconColor: Colors.orange,
                               onDelete: () {
-                                final payload = {'category_id': category.id, 'user_id': category.userId};
+                                final payload = {'category': category};
                                 context.read<CategoryBloc>().add(CategoryEvent.deleteCategoryStart(payload: payload));
                               },
                             );
