@@ -66,7 +66,7 @@ class _NoteEditorViewState extends State<NoteEditorView> {
     final secureStorageCacheService = SecureStorageCacheService.instance;
     final user = await secureStorageCacheService.getUser();
 
-    // Yeni not oluştur
+    // create new note
     final note = NewNote(
       userId: user!.id,
       categoryId: widget.category!.id,
@@ -83,14 +83,12 @@ class _NoteEditorViewState extends State<NoteEditorView> {
   }
 
   void _updateNote() async {
-    // Quill Delta'sını JSON'a çevir
     final delta = _controller.document.toDelta();
     final deltaJson = jsonEncode(delta.toJson());
 
     final secureStorageCacheService = SecureStorageCacheService.instance;
     final user = await secureStorageCacheService.getUser();
 
-    // Güncellenmiş notu oluştur
     final updatedNote = Note(
       id: widget.existingNote!.id,
       userId: user!.id,
