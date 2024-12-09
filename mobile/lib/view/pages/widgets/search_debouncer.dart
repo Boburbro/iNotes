@@ -20,6 +20,10 @@ class SearchDebouncer {
     searchController.addListener(_onSearchChanged);
   }
 
+  void initialize() {
+    _onSearchChanged();
+  }
+
   void _onSearchChanged() {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     _debounce = Timer(debounceDuration, () {
@@ -30,7 +34,6 @@ class SearchDebouncer {
         query['category'] = category;
       }
 
-      print('QUERY: $query');
       onSearchChanged(query);
     });
   }
